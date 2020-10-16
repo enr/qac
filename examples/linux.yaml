@@ -1,0 +1,144 @@
+preconditions:
+  fs:
+    - file: ../workdir/test-cp-resolv.conf
+      exists: false
+    - directory: ../workdir/mkdir_ko
+      exists: false
+    - directory: ../workdir/test-cp-r
+      exists: false
+specs:
+  mkdir_ok:
+    command:
+      cli: mkdir -p ../workdir/t/test_mkdir_ok
+    expectations:
+      status:
+        equals_to: 0
+      output:
+        stdout:
+          is_empty: true
+        stderr:
+          is_empty: true
+      fs:
+        - directory: ../workdir/t/test_mkdir_ok
+  cp:
+    preconditions:
+      fs:
+        - file: /etc/resolv.conf
+          exists: true
+          contains_all:
+            - nameserver
+        - file: ../workdir/test-cp-resolv.conf
+          exists: false
+    command:
+      cli: cp /etc/resolv.conf ../workdir/test-cp-resolv.conf
+    expectations:
+      status:
+        equals_to: 0
+      output:
+        stdout:
+          is_empty: true
+        stderr:
+          is_empty: true
+      fs:
+        - file: /etc/resolv.conf
+          exists: true
+        - file: ../workdir/test-cp-resolv.conf
+          text_equals_to: /etc/resolv.conf
+  rm:
+    preconditions:
+      fs:
+        - file: ../workdir/test_rm
+    command:
+      cli: rm ../workdir/test_rm
+    expectations:
+      status:
+        equals_to: 0
+      output:
+        stdout:
+          is_empty: true
+        stderr:
+          is_empty: true
+      fs:
+        - file: ../workdir/test_rm
+          exists: false
+  mkdir_ko:
+    command:
+      exe: /usr/bin/mkdir
+      args:
+        - ../workdir/t/mkdir_ko/path/not/found/test
+    expectations:
+      status:
+        equals_to: 1
+      output:
+        stdout:
+          is_empty: true
+        # stderr:
+        # some distros does not write to stderr (?)
+        #   contains_all:
+        #     - ../workdir/t/mkdir_ko/path/not/found/test
+      fs:
+        - directory: ../workdir/t/mkdir_ko/path/not/found/test
+          exists: false
+  pwd:
+    command:
+      cli: pwd
+    expectations:
+      status:
+        equals_to: 0
+      output:
+        stdout:
+          ends_with: /qac/examples
+  which_cp:
+    command:
+      cli: which cp
+    expectations:
+      status:
+        equals_to: 0
+      output:
+        stdout:
+          ends_with: /cp
+  cp_r:
+    preconditions:
+      fs:
+        - directory: ../workdir/test_cp_r
+          exists: false
+    command:
+      cli: cp -r . ../workdir/test_cp_r
+    expectations:
+      status:
+        equals_to: 0
+      output:
+        stdout:
+          is_empty: true
+        stderr:
+          is_empty: true
+      fs:
+        - directory: ../workdir/test_cp_r
+          equals_to: .
+  rm_r:
+    preconditions:
+      fs:
+        - directory: ../workdir/test_rm_r
+    command:
+      cli: rm -r ../workdir/test_rm_r
+    expectations:
+      status:
+        equals_to: 0
+      output:
+        stdout:
+          is_empty: true
+        stderr:
+          is_empty: true
+      fs:
+        - directory: ../workdir/test_rm_r
+          exists: false
+  cat:
+    command:
+      working_dir: ../
+      cli: cat go.mod
+    expectations:
+      status:
+        equals_to: 0
+      output:
+        stdout:
+          equals_to_file: ../go.mod

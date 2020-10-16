@@ -1,0 +1,45 @@
+preconditions:
+  fs:
+    - file: linux.yaml
+      exists: true
+      contains_all:
+        - preconditions
+        - file
+specs:
+  copy:
+    preconditions:
+      fs:
+        - file: linux-copy.yaml
+          exists: false
+    command:
+      cli: copy linux.yaml linux-copy.yaml
+    expectations:
+      status:
+        equals_to: 0
+      output:
+        stdout:
+          contains: file
+        stderr:
+          is_empty: true
+      fs:
+        - file: linux.yaml
+          exists: true
+        - file: linux-copy.yaml
+          text_equals_to: linux.yaml
+  del:
+    preconditions:
+      fs:
+        - file: linux-copy.yaml
+    command:
+      cli: del linux-copy.yaml
+    expectations:
+      status:
+        equals_to: 0
+      output:
+        stdout:
+          is_empty: true
+        stderr:
+          is_empty: true
+      fs:
+        - file: linux-copy.yaml
+          exists: false

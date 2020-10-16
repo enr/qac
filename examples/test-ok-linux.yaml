@@ -1,0 +1,16 @@
+# Specification file with no errors.
+specs:
+  exit-3:
+    command:
+      working_dir: ..
+      cli: testbin/exit-3
+    expectations:
+      status:
+        equals_to: 3
+      output:
+        stdout:
+          equals_to: |
+            stdout exit-3
+        stderr:
+          equals_to: |
+            stderr exit-3
