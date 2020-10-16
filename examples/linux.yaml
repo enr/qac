@@ -87,7 +87,7 @@ specs:
         equals_to: 0
       output:
         stdout:
-          ends_with: /qac/examples
+          ends_with: /examples
   which_cp:
     command:
       cli: which cp

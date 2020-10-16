@@ -8,23 +8,23 @@ import (
 
 func TestLauncherExecution(t *testing.T) {
 	// prepare test filesystem
-	err := os.RemoveAll("../../qac/tmp")
+	err := os.RemoveAll("./workdir")
 	if err != nil {
 		t.Fatalf(`error prepare %v`, err)
 	}
-	err = os.MkdirAll("../../qac/tmp", 0755)
+	err = os.MkdirAll("./workdir", 0755)
 	if err != nil {
 		t.Fatalf(`error prepare %v`, err)
 	}
-	err = os.MkdirAll("../../qac/tmp/test-rm_r", 0755)
+	err = os.MkdirAll("./workdir/test_rm_r/dir", 0755)
 	if err != nil {
 		t.Fatalf(`error prepare %v`, err)
 	}
-	err = createEmptyFile(`../../qac/tmp/test-rm_r/file`)
+	err = createEmptyFile(`./workdir/test_rm_r/dir/file`)
 	if err != nil {
 		t.Fatalf(`error prepare %v`, err)
 	}
-	err = createEmptyFile(`../../qac/tmp/test-rm`)
+	err = createEmptyFile(`./workdir/test_rm`)
 	if err != nil {
 		t.Fatalf(`error prepare %v`, err)
 	}
