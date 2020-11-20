@@ -3,23 +3,36 @@
 package qac
 
 import (
-	"fmt"
 	"testing"
 )
 
-func TestResolvePath1(t *testing.T) {
-	declared := `.\..\aaa`
-	context := planContext{
-		basedir: `C:\projects\`,
-	}
-	actual, _ := resolvePath(declared, context)
-	fmt.Printf("ACTUAL %s \n", actual)
+type windowsPathTestCase struct {
+	basedir  string
+	declared string
+	expected string
 }
-func TestResolvePath2(t *testing.T) {
-	declared := `..`
-	context := planContext{
-		basedir: `C:\projects\test`,
+
+var windowsPaths = []windowsPathTestCase{
+	{
+		basedir:  `C:\projects\`,
+		declared: `.\..\aaa`,
+		expected: `C:\aaa`,
+	},
+	{
+		basedir:  `C:\projects\test`,
+		declared: `..`,
+		expected: `C:\projects`,
+	},
+}
+
+func TestResolveWindowsPath(t *testing.T) {
+	for _, p := range windowsPaths {
+		context := planContext{
+			basedir: p.basedir,
+		}
+		actual, _ := resolvePath(p.declared, context)
+		if actual != p.expected {
+			t.Errorf(`Windows path resolution error: expected %s got %s`, p.expected, actual)
+		}
 	}
-	actual, _ := resolvePath(declared, context)
-	fmt.Printf("ACTUAL %s \n", actual)
 }
