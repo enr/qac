@@ -16,6 +16,16 @@ var statusEqualsToSpecs = []statusAssertionTestCase{
 		value:           "1",
 		expectedSuccess: true,
 	},
+	{
+		exitCode:        0,
+		value:           "1",
+		expectedSuccess: false,
+	},
+	{
+		exitCode:        1,
+		value:           "0",
+		expectedSuccess: false,
+	},
 }
 
 func TestIsEqualAssertion(t *testing.T) {
@@ -42,6 +52,16 @@ var statusGreaterThenSpecs = []statusAssertionTestCase{
 		exitCode:        1,
 		value:           "0",
 		expectedSuccess: true,
+	},
+	{
+		exitCode:        1,
+		value:           "1",
+		expectedSuccess: false,
+	},
+	{
+		exitCode:        1,
+		value:           "2",
+		expectedSuccess: false,
 	},
 }
 

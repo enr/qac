@@ -117,6 +117,9 @@ func (l *Launcher) executeSpec(context planContext, report *TestExecutionReport)
 		return
 	}
 	phase := fmt.Sprintf(`%s`, spec.ID())
+	if spec.Description != "" {
+		phase = fmt.Sprintf(`%s : %s`, phase, spec.Description)
+	}
 	command := spec.Command
 	wd, err := resolvePath(command.WorkingDir, context)
 	if err != nil {

@@ -8,6 +8,7 @@ preconditions:
       exists: false
 specs:
   mkdir_ok:
+    description: Checks the mkdir command
     command:
       cli: mkdir -p ../workdir/t/test_mkdir_ok
     expectations:

@@ -15,6 +15,7 @@ type TestPlan struct {
 // Spec is the single test.
 type Spec struct {
 	id            string
+	Description   string        `yaml:"description"`
 	Preconditions Preconditions `yaml:"preconditions"`
 	Command       Command       `yaml:"command"`
 	Expectations  Expectations  `yaml:"expectations"`
