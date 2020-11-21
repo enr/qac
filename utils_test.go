@@ -23,6 +23,16 @@ var windowsPaths = []windowsPathTestCase{
 		declared: `..`,
 		expected: `C:\projects`,
 	},
+	{
+		basedir:  `C:/projects/`,
+		declared: `./../aaa`,
+		expected: `C:\aaa`,
+	},
+	{
+		basedir:  `C:/projects/test`,
+		declared: `..`,
+		expected: `C:\projects`,
+	},
 }
 
 func TestResolveWindowsPath(t *testing.T) {

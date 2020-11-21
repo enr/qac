@@ -43,3 +43,14 @@ specs:
       fs:
         - file: linux-copy.yaml
           exists: false
+  echo_env:
+    command:
+      cli: echo %QAC_TEST_ECHO_ENV%
+      env:
+        QAC_TEST_ECHO_ENV: test-echo-env
+    expectations:
+      status:
+        equals_to: 0
+      output:
+        stdout:
+          equals_to: test-echo-env

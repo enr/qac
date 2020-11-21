@@ -90,7 +90,8 @@ type Command struct {
 	WorkingDir string `yaml:"working_dir"`
 	Cli        string `yaml:"cli"`
 	Exe        string `yaml:"exe"`
-	// aggiunta a exe
+	Env        map[string]string
+	// added to exe
 	Extension FileExtension `yaml:"ext"`
 	Args      []string      `yaml:"args"`
 }

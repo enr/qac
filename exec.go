@@ -46,6 +46,7 @@ func (e *runcmdExecutor) toRuncmd(command Command) *runcmd.Command {
 		Args:        command.Args,
 		CommandLine: command.Cli,
 		WorkingDir:  command.WorkingDir,
+		Env:         command.Env,
 	}
 	return c
 }

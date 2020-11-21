@@ -143,3 +143,14 @@ specs:
       output:
         stdout:
           equals_to_file: ../go.mod
+  echo_env:
+    command:
+      cli: echo $QAC_TEST_ECHO_ENV
+      env:
+        QAC_TEST_ECHO_ENV: test-echo-env
+    expectations:
+      status:
+        equals_to: 0
+      output:
+        stdout:
+          equals_to: test-echo-env
