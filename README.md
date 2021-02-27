@@ -40,7 +40,7 @@ func TestExecution(t *testing.T) {
   reporter := qac.NewTestLogsReporter(t)
   reporter.Publish(report)
   // Fail test if any error is found
-  for _ei_, err := range report.AllErrors() {
+  for _, err := range report.AllErrors() {
     t.Errorf(`error %v`, err)
   }
 }
