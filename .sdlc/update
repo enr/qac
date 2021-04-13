@@ -11,7 +11,3 @@ cd "$PRJ_HOME"
 
 go mod tidy
 
-[[ -n "$SDLC_GO_VENDOR" ]] && {
-  echo 'Detected Go vendor mode'
-  go mod vendor
-}

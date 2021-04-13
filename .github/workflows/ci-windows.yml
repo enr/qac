@@ -6,6 +6,10 @@ on:
       - main
     tags-ignore:
       - '*'
+    paths-ignore: 
+      - README.md
+      - LICENSE
+      - docs/*
 
 jobs:
   build:
@@ -16,7 +20,7 @@ jobs:
     runs-on: ${{ matrix.platform }}
     steps:
     - name: Install Go ${{ matrix.go-version }}
-      uses: actions/setup-go@v1
+      uses: actions/setup-go@v2
       with:
         go-version: ${{ matrix.go-version }}
     - name: Checkout code
