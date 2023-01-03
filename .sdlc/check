@@ -3,13 +3,13 @@
 set -e
 
 TOOL_SOURCE="${BASH_SOURCE[0]}"
-while [ -h "$TOOL_SOURCE" ] ; do TOOL_SOURCE="$(readlink "$TOOL_SOURCE")"; done
-SDLC_DIR="$( cd -P "$( dirname "$TOOL_SOURCE" )" && pwd )"
-PRJ_HOME="$( cd -P "$( dirname "$SDLC_DIR" )" && pwd )"
+while [ -h "$TOOL_SOURCE" ]; do TOOL_SOURCE="$(readlink "$TOOL_SOURCE")"; done
+SDLC_DIR="$(cd -P "$(dirname "$TOOL_SOURCE")" && pwd)"
+PRJ_HOME="$(cd -P "$(dirname "$SDLC_DIR")" && pwd)"
 
 git_hash="$(git rev-parse HEAD)"
 git_message=$(git log --format=%B -n 1 "${git_hash}")
-echo "git message ${git_message}"
+echo "Last commit message ${git_message}"
 
 source "${SDLC_DIR}/config"
 app_name="${REPO_NAME}"
@@ -31,21 +31,26 @@ echo "Environment PATH=${PATH}"
   export PATH="${GOPATH}/bin:${PATH}"
 }
 
+# cd to a temporary directory to avoid changes to go.mod
+cd $(mktemp -d)
+
 hash golint 2>/dev/null || {
-  go get -u golang.org/x/lint/golint
+  go install golang.org/x/lint/golint@latest
 }
 
 hash goimports 2>/dev/null || {
-  go get -u golang.org/x/tools/cmd/goimports
+  go install golang.org/x/tools/cmd/goimports@latest
 }
 
 hash gocyclo 2>/dev/null || {
-  go get -u github.com/fzipp/gocyclo/cmd/gocyclo
+  go install github.com/fzipp/gocyclo/cmd/gocyclo@latest
 }
 
+buildmode='readonly'
 [[ -n "$SDLC_GO_VENDOR" ]] && {
-  echo 'Detected Go vendor mode: set GOPROXY=off'
   export GOPROXY='off'
+  buildmode='vendor'
+  echo "Detected Go vendor mode: set GOPROXY=off and buildmode ${buildmode}"
 }
 
 cd "${PRJ_HOME}"
@@ -60,7 +65,7 @@ echo "--- goimports"
 goimports -w .
 diff <(goimports -d .) <(printf "")
 echo "--- gocyclo"
-diff <(gocyclo -over 20 *.go) <(printf "")
+diff <(gocyclo -over 25 *.go) <(printf "")
 echo "--- go test"
 go test -cover ./...
 

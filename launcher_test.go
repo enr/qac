@@ -158,3 +158,65 @@ func TestSpecificationOk(t *testing.T) {
 	}
 
 }
+
+func TestOutputContainsNone(t *testing.T) {
+	stdout := fmt.Sprintf(`stdout-%d`, time.Now().UnixNano())
+	stderr := fmt.Sprintf(`stderr-%d`, time.Now().UnixNano())
+	exitCode := randomExitCode()
+
+	e := &fixedValueExecutor{
+		success:  true,
+		exitCode: exitCode,
+		stdout:   stdout,
+		stderr:   stderr,
+	}
+	sut := newLauncher(e)
+
+	/*
+	 *  A Spec with no errors.
+	 */
+	expectations := Expectations{
+		StatusAssertion: StatusAssertion{
+			EqualsTo: strconv.Itoa(exitCode),
+		},
+		OutputAssertions: OutputAssertions{
+			Stdout: OutputAssertion{
+				ContainsNone: []string{stdout},
+			},
+			Stderr: OutputAssertion{
+				EqualsTo: stderr,
+			},
+		},
+	}
+
+	spec := Spec{
+		Command: Command{
+			Exe:  "test",
+			Args: []string{},
+		},
+		Expectations: expectations,
+	}
+
+	specs := make(map[string]Spec)
+	specs[`test1`] = spec
+	plan := TestPlan{
+		Specs: specs,
+	}
+
+	res := sut.Execute(plan)
+
+	reporter := NewConsoleReporter()
+	reporter.Publish(res)
+
+	errors := res.AllErrors()
+	if len(errors) != 1 {
+		t.Errorf(`expected 1 errors but got %d`, len(errors))
+	}
+	if len(errors) == 1 {
+		ae := errors[0]
+		if !strings.Contains(ae.Error(), stdout) {
+			t.Errorf(`error does not contain "%s" but: "%s"`, stdout, ae.Error())
+		}
+	}
+
+}
