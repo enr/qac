@@ -81,7 +81,7 @@ type TestExecutionReport struct {
 }
 
 func (r *TestExecutionReport) addEntryAsErrorString(phase string, message string) {
-	r.addEntryAsError(phase, fmt.Errorf(message))
+	r.addEntryAsError(phase, fmt.Errorf("%s", message))
 }
 
 func (r *TestExecutionReport) addEntryAsError(phase string, err error) {
