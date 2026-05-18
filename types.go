@@ -4,12 +4,43 @@ import (
 	"fmt"
 	"runtime"
 	"strings"
+
+	"gopkg.in/yaml.v2"
 )
 
 // TestPlan represents the full set of tests on a program.
 type TestPlan struct {
 	Preconditions Preconditions   `yaml:"preconditions"`
 	Specs         map[string]Spec `yaml:"specs"`
+	specOrder     []string
+}
+
+// UnmarshalYAML preserves the declaration order of specs from the YAML source.
+func (tp *TestPlan) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	type rawPlan struct {
+		Preconditions Preconditions `yaml:"preconditions"`
+		Specs         yaml.MapSlice `yaml:"specs"`
+	}
+	raw := rawPlan{}
+	if err := unmarshal(&raw); err != nil {
+		return err
+	}
+	tp.Preconditions = raw.Preconditions
+	tp.Specs = make(map[string]Spec, len(raw.Specs))
+	for _, item := range raw.Specs {
+		key := fmt.Sprintf("%v", item.Key)
+		val, err := yaml.Marshal(item.Value)
+		if err != nil {
+			return err
+		}
+		var spec Spec
+		if err := yaml.Unmarshal(val, &spec); err != nil {
+			return err
+		}
+		tp.Specs[key] = spec
+		tp.specOrder = append(tp.specOrder, key)
+	}
+	return nil
 }
 
 // Spec is the single test.
