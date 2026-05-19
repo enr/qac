@@ -73,11 +73,16 @@ func (l *Launcher) execute(plan TestPlan, context planContext) *TestExecutionRep
 		report.addEntryInfo(`preconditions`, fmt.Sprintf("error in plan preconditions, stop plan execution"))
 		return report
 	}
-	specs := plan.Specs
-	for key, spec := range specs {
+	order := plan.specOrder
+	if len(order) == 0 {
+		for key := range plan.Specs {
+			order = append(order, key)
+		}
+	}
+	for _, key := range order {
+		spec := plan.Specs[key]
 		spec.id = key
 		context.currentSpec = spec
-		// report.phase = fmt.Sprintf(`%s / %s`, k, spec.Command.String())
 		l.executeSpec(context, report)
 	}
 	return report
