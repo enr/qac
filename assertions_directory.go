@@ -100,7 +100,7 @@ func (a *DirectoryAssertion) verifyContainsAny(actualPath string, files []string
 		}
 	}
 	if miss {
-		result.addErrorf(`directory does not contain any of %q`, files)
+		result.addErrorf(`directory %s does not contain any of %q`, actualPath, a.ContainsAny)
 	}
 }
 
