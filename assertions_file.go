@@ -25,7 +25,7 @@ func (a *FileAssertion) verify(context planContext) AssertionResult {
 	}
 	actualPath, err := resolvePath(fp, context)
 	if err != nil {
-		result.addError(err)
+		result.addError(fmt.Errorf("resolving file path %q: %w", fp, err))
 		return result
 	}
 	fileExists := files.Exists(actualPath)
@@ -41,8 +41,7 @@ func (a *FileAssertion) verify(context planContext) AssertionResult {
 	if a.EqualsTo != "" {
 		other, err := resolvePath(a.EqualsTo, context)
 		if err != nil {
-			result.addError(err)
-			// block
+			result.addError(fmt.Errorf("resolving equals_to path %q: %w", a.EqualsTo, err))
 			return result
 		}
 		if !files.Exists(other) {
@@ -61,8 +60,7 @@ func (a *FileAssertion) verify(context planContext) AssertionResult {
 	if a.TextEqualsTo != "" {
 		exp, err := resolvePath(a.TextEqualsTo, context)
 		if err != nil {
-			result.addError(err)
-			// block
+			result.addError(fmt.Errorf("resolving text_equals_to path %q: %w", a.TextEqualsTo, err))
 			return result
 		}
 		if !files.Exists(exp) {
@@ -76,7 +74,7 @@ func (a *FileAssertion) verify(context planContext) AssertionResult {
 	if len(a.ContainsAll) > 0 {
 		content, err := ioutil.ReadFile(actualPath)
 		if err != nil {
-			result.addError(err)
+			result.addError(fmt.Errorf("reading %q: %w", actualPath, err))
 			return result
 		}
 		cf := string(content)
@@ -89,7 +87,7 @@ func (a *FileAssertion) verify(context planContext) AssertionResult {
 	if len(a.ContainsAny) > 0 {
 		content, err := ioutil.ReadFile(actualPath)
 		if err != nil {
-			result.addError(err)
+			result.addError(fmt.Errorf("reading %q: %w", actualPath, err))
 			return result
 		}
 		cf := string(content)
@@ -121,8 +119,14 @@ func verifyFilesEqual(actualPath string, other string) []error {
 
 func verifyFilesEqualHash(actualPath string, other string) []error {
 	errs := []error{}
-	hash1, _ := hash(actualPath)
-	hash2, _ := hash(other)
+	hash1, err := hash(actualPath)
+	if err != nil {
+		return append(errs, fmt.Errorf("hashing actual file %q: %w", actualPath, err))
+	}
+	hash2, err := hash(other)
+	if err != nil {
+		return append(errs, fmt.Errorf("hashing expected file %q: %w", other, err))
+	}
 	if hash1 != hash2 {
 		errs = append(errs, fmt.Errorf("File %s [%s] differs from\n%s [%s]", actualPath, hash1, other, hash2))
 	}
@@ -163,12 +167,14 @@ func verifyFilesEqualText(actualPath string, exp string) []error {
 
 func hash(fullpath string) (string, error) {
 	fh, err := os.Open(fullpath)
-	defer fh.Close()
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("opening %q: %w", fullpath, err)
 	}
+	defer fh.Close()
 	h := sha1.New()
-	io.Copy(h, fh)
+	if _, err := io.Copy(h, fh); err != nil {
+		return "", fmt.Errorf("reading %q: %w", fullpath, err)
+	}
 	return fmt.Sprintf("%x", h.Sum(nil)), nil
 }
 

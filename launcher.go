@@ -41,14 +41,14 @@ type Launcher struct {
 func (l *Launcher) ExecuteFile(path string) *TestExecutionReport {
 	dat, err := ioutil.ReadFile(path)
 	if err != nil {
-		log.Fatalf("error: %v", err)
+		log.Fatalf("reading test plan %q: %v", path, err)
 	}
 	plan := TestPlan{}
 	dec := yaml.NewDecoder(bytes.NewReader(dat))
 	dec.KnownFields(true)
 	err = dec.Decode(&plan)
 	if err != nil {
-		log.Fatalf("error: %v", err)
+		log.Fatalf("parsing test plan %q: %v", path, err)
 	}
 	basedir, _ := filepath.Abs(filepath.Dir(path))
 	context := planContext{}
