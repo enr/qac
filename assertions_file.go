@@ -150,7 +150,7 @@ func verifyFilesEqualText(actualPath string, exp string) []error {
 	}
 	for index, actual := range filelines {
 		if len(expectedlines) <= index {
-			errs = append(errs, fmt.Errorf(`unexpected line %d in file %s`, (index+1), actual))
+			errs = append(errs, fmt.Errorf(`unexpected extra line %d in %s: %q`, index+1, actualPath, actual))
 			continue
 		}
 		expected := expectedlines[index]
