@@ -4,7 +4,6 @@ import (
 	"crypto/sha1"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"strings"
 
@@ -72,7 +71,7 @@ func (a *FileAssertion) verify(context planContext) AssertionResult {
 	}
 
 	if len(a.ContainsAll) > 0 {
-		content, err := ioutil.ReadFile(actualPath)
+		content, err := os.ReadFile(actualPath)
 		if err != nil {
 			result.addInfraError(fmt.Errorf("reading %q: %w", actualPath, err))
 			return result
@@ -85,7 +84,7 @@ func (a *FileAssertion) verify(context planContext) AssertionResult {
 		}
 	}
 	if len(a.ContainsAny) > 0 {
-		content, err := ioutil.ReadFile(actualPath)
+		content, err := os.ReadFile(actualPath)
 		if err != nil {
 			result.addInfraError(fmt.Errorf("reading %q: %w", actualPath, err))
 			return result

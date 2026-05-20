@@ -1,7 +1,6 @@
 package qac
 
 import (
-	"io/ioutil"
 	"os"
 	"testing"
 )
@@ -43,5 +42,5 @@ func TestLauncherExecution(t *testing.T) {
 
 func createEmptyFile(name string) error {
 	d := []byte("")
-	return ioutil.WriteFile(name, d, 0644)
+	return os.WriteFile(name, d, 0644)
 }

@@ -2,7 +2,7 @@ package qac
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
 	"strings"
 )
 
@@ -33,7 +33,7 @@ func (a *OutputAssertion) verify(context planContext) AssertionResult {
 			result.addInfraError(fmt.Errorf("resolving equals_to_file path %q: %w", a.EqualsToFile, err))
 			return result
 		}
-		content, err := ioutil.ReadFile(f)
+		content, err := os.ReadFile(f)
 		if err != nil {
 			result.addInfraError(fmt.Errorf("reading equals_to_file %q: %w", f, err))
 			return result

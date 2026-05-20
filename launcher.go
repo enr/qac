@@ -3,7 +3,6 @@ package qac
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"time"
@@ -40,7 +39,7 @@ type Launcher struct {
 // ExecuteFile run tests loaded from a file.
 func (l *Launcher) ExecuteFile(path string) *TestExecutionReport {
 	report := &TestExecutionReport{}
-	dat, err := ioutil.ReadFile(path)
+	dat, err := os.ReadFile(path)
 	if err != nil {
 		report.addEntryAsError("load", asConfigError(fmt.Errorf("reading test plan %q: %w", path, err)))
 		return report
