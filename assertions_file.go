@@ -189,10 +189,9 @@ func isBinary(path string) bool {
 	return isBinaryFile(file)
 }
 
-// isBinary guesses whether a file is binary by reading the first X bytes and seeing if there are any nulls.
-// Assumes the file starts seeked the beginning.
+// isBinaryFile guesses whether a file is binary by reading the first X bytes and seeing if there are any nulls.
+// Assumes the file is seeked to the beginning by the caller.
 func isBinaryFile(file *os.File) bool {
-	defer file.Seek(0, 0)
 	buf := make([]byte, binaryDetectionBytes)
 	for {
 		n, err := file.Read(buf)
