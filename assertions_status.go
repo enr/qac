@@ -42,7 +42,7 @@ func (a *StatusAssertion) verify(context planContext) AssertionResult {
 		if commandResult.exitCode != i {
 			result.addErrorf(`exit code expected EQUALS %d got %d`, i, commandResult.exitCode)
 		}
-		commandErrorIsAcceptable = i > 0
+		commandErrorIsAcceptable = commandErrorIsAcceptable || i > 0
 	}
 	if commandResult.err != nil && !commandErrorIsAcceptable {
 		result.addErrorf(`command execution error: %v`, commandResult.err)
