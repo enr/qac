@@ -181,7 +181,10 @@ func hash(fullpath string) (string, error) {
 }
 
 func isBinary(path string) bool {
-	file, _ := os.Open(path)
+	file, err := os.Open(path)
+	if err != nil {
+		return false
+	}
 	defer file.Close()
 	return isBinaryFile(file)
 }
