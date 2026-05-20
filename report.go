@@ -97,8 +97,8 @@ func newReportEntrySkipped(reason string) ReportEntry {
 
 // TestExecutionReport is the full report on a test execution
 type TestExecutionReport struct {
-	// used to keep report entries ordered
-	blocks []*ReportBlock
+	blocks     []*ReportBlock
+	blockIndex map[string]*ReportBlock
 }
 
 func (r *TestExecutionReport) addEntryAsErrorString(phase string, message string) {
@@ -126,41 +126,40 @@ func (r *TestExecutionReport) addEntrySkipped(phase string, reason string) {
 }
 
 func (r *TestExecutionReport) addEntry(phase string, entry ReportEntry) {
-	for _, block := range r.blocks {
-		if block.phase == phase {
-			block.entries = append(block.entries, entry)
-			return
-		}
+	if b, ok := r.blockIndex[phase]; ok {
+		b.entries = append(b.entries, entry)
+		return
 	}
-	r.blocks = append(r.blocks, &ReportBlock{phase: phase, entries: []ReportEntry{entry}})
+	b := &ReportBlock{phase: phase, entries: []ReportEntry{entry}}
+	r.blocks = append(r.blocks, b)
+	r.ensureIndex()[phase] = b
+}
+
+func (r *TestExecutionReport) ensureIndex() map[string]*ReportBlock {
+	if r.blockIndex == nil {
+		r.blockIndex = make(map[string]*ReportBlock)
+	}
+	return r.blockIndex
 }
 
 // openBlock pre-creates a numbered spec block before execution begins,
 // so index/total/startedAt are available even if the block ends up with no entries.
 func (r *TestExecutionReport) openBlock(phase string, index, total int, startedAt time.Time) {
-	for _, block := range r.blocks {
-		if block.phase == phase {
-			block.index = index
-			block.total = total
-			block.startedAt = startedAt
-			return
-		}
+	if b, ok := r.blockIndex[phase]; ok {
+		b.index = index
+		b.total = total
+		b.startedAt = startedAt
+		return
 	}
-	r.blocks = append(r.blocks, &ReportBlock{
-		phase:     phase,
-		index:     index,
-		total:     total,
-		startedAt: startedAt,
-	})
+	b := &ReportBlock{phase: phase, index: index, total: total, startedAt: startedAt}
+	r.blocks = append(r.blocks, b)
+	r.ensureIndex()[phase] = b
 }
 
 // closeBlock stamps the duration onto the block once execution is done.
 func (r *TestExecutionReport) closeBlock(phase string, d time.Duration) {
-	for _, block := range r.blocks {
-		if block.phase == phase {
-			block.duration = d
-			return
-		}
+	if b, ok := r.blockIndex[phase]; ok {
+		b.duration = d
 	}
 }
 
