@@ -5,7 +5,7 @@ specs:
       cli: pwd
     expectations:
       status:
-        equals_to: "0"
+        equals_to: 0
       output:
         stdout:
           ends_with: /e2e
@@ -19,7 +19,7 @@ specs:
       cli: pwd
     expectations:
       status:
-        equals_to: "0"
+        equals_to: 0
       output:
         stdout:
           ends_with: /testdata

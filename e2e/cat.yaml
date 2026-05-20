@@ -9,7 +9,7 @@ specs:
       cli: cat testdata/sample.txt
     expectations:
       status:
-        equals_to: "0"
+        equals_to: 0
       output:
         stdout:
           equals_to_file: testdata/sample.txt
@@ -22,7 +22,7 @@ specs:
       cli: cat testdata/sample.txt
     expectations:
       status:
-        equals_to: "0"
+        equals_to: 0
       output:
         stdout:
           contains_all:
@@ -38,7 +38,7 @@ specs:
       cli: cat testdata/nonexistent-file.txt
     expectations:
       status:
-        greater_than: "0"
+        greater_than: 0
       output:
         stdout:
           is_empty: true

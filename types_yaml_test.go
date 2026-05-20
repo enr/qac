@@ -23,7 +23,7 @@ specs:
       cli: my-tool --output result.txt
     expectations:
       status:
-        equals_to: "0"
+        equals_to: 0
 `
 	_, err := unmarshalPlan(t, input)
 	if err == nil {

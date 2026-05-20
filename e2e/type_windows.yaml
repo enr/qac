@@ -9,7 +9,7 @@ specs:
       cli: type testdata\sample.txt
     expectations:
       status:
-        equals_to: "0"
+        equals_to: 0
       output:
         stdout:
           contains_all:
@@ -25,7 +25,7 @@ specs:
       cli: type testdata\nonexistent-file.txt
     expectations:
       status:
-        greater_than: "0"
+        greater_than: 0
       output:
         stdout:
           is_empty: true

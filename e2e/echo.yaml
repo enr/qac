@@ -5,7 +5,7 @@ specs:
       cli: echo hello
     expectations:
       status:
-        equals_to: "0"
+        equals_to: 0
       output:
         stdout:
           equals_to: hello
@@ -18,7 +18,7 @@ specs:
       cli: echo foo bar baz
     expectations:
       status:
-        equals_to: "0"
+        equals_to: 0
       output:
         stdout:
           contains_all:
@@ -34,7 +34,7 @@ specs:
         E2E_GREETING: hello-from-env
     expectations:
       status:
-        equals_to: "0"
+        equals_to: 0
       output:
         stdout:
           equals_to: hello-from-env
@@ -47,7 +47,7 @@ specs:
       cli: echo "first second third"
     expectations:
       status:
-        equals_to: "0"
+        equals_to: 0
       output:
         stdout:
           starts_with: first
@@ -58,7 +58,7 @@ specs:
       cli: echo "first second third"
     expectations:
       status:
-        equals_to: "0"
+        equals_to: 0
       output:
         stdout:
           ends_with: third

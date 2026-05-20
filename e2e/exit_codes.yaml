@@ -5,7 +5,7 @@ specs:
       cli: "true"
     expectations:
       status:
-        equals_to: "0"
+        equals_to: 0
 
   failure:
     description: false always exits 1
@@ -13,7 +13,7 @@ specs:
       cli: "false"
     expectations:
       status:
-        equals_to: "1"
+        equals_to: 1
 
   greater_than:
     description: false exit code is greater than 0
@@ -21,7 +21,7 @@ specs:
       cli: "false"
     expectations:
       status:
-        greater_than: "0"
+        greater_than: 0
 
   lesser_than:
     description: true exit code is less than 1
@@ -29,4 +29,4 @@ specs:
       cli: "true"
     expectations:
       status:
-        lesser_than: "1"
+        lesser_than: 1

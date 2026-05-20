@@ -5,7 +5,7 @@ specs:
       cli: echo test
     expectations:
       status:
-        equals_to: "0"
+        equals_to: 0
 
   failure:
     description: type on a nonexistent file exits non-zero
@@ -13,7 +13,7 @@ specs:
       cli: type nonexistent_xyz_abc.txt
     expectations:
       status:
-        greater_than: "0"
+        greater_than: 0
 
   lesser_than:
     description: echo exit code is less than 1
@@ -21,4 +21,4 @@ specs:
       cli: echo test
     expectations:
       status:
-        lesser_than: "1"
+        lesser_than: 1

@@ -3,7 +3,6 @@ package qac
 import (
 	"fmt"
 	"math/rand"
-	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -34,7 +33,7 @@ func TestSpecificationWithWrongAssertions(t *testing.T) {
 	stderr := fmt.Sprintf(`stderr-%d`, time.Now().UnixNano())
 
 	e := &fixedValueExecutor{
-		exitCode: 1, // non-zero so the EqualsTo:"0" status assertion always fails
+		exitCode: 1, // non-zero so the EqualsTo:0 status assertion always fails
 		stdout:   stdout,
 		stderr:   stderr,
 	}
@@ -43,9 +42,10 @@ func TestSpecificationWithWrongAssertions(t *testing.T) {
 	/*
 	 *  A Spec with wrong assertions.
 	 */
+	zero := 0
 	expectations := Expectations{
 		StatusAssertion: StatusAssertion{
-			EqualsTo: `0`,
+			EqualsTo: &zero,
 		},
 		OutputAssertions: OutputAssertions{
 			Stdout: OutputAssertion{
@@ -114,7 +114,7 @@ func TestSpecificationOk(t *testing.T) {
 	 */
 	expectations := Expectations{
 		StatusAssertion: StatusAssertion{
-			EqualsTo: strconv.Itoa(exitCode),
+			EqualsTo: &exitCode,
 		},
 		OutputAssertions: OutputAssertions{
 			Stdout: OutputAssertion{
@@ -173,7 +173,7 @@ func TestOutputContainsNone(t *testing.T) {
 	 */
 	expectations := Expectations{
 		StatusAssertion: StatusAssertion{
-			EqualsTo: strconv.Itoa(exitCode),
+			EqualsTo: &exitCode,
 		},
 		OutputAssertions: OutputAssertions{
 			Stdout: OutputAssertion{

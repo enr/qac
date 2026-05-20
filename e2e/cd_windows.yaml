@@ -5,7 +5,7 @@ specs:
       cli: cd
     expectations:
       status:
-        equals_to: "0"
+        equals_to: 0
       output:
         stdout:
           contains_all:
@@ -20,7 +20,7 @@ specs:
       cli: cd
     expectations:
       status:
-        equals_to: "0"
+        equals_to: 0
       output:
         stdout:
           contains_all:

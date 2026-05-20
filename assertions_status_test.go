@@ -6,24 +6,24 @@ import (
 
 type statusAssertionTestCase struct {
 	exitCode        int
-	value           string
+	value           int
 	expectedSuccess bool
 }
 
 var statusEqualsToSpecs = []statusAssertionTestCase{
 	{
 		exitCode:        1,
-		value:           "1",
+		value:           1,
 		expectedSuccess: true,
 	},
 	{
 		exitCode:        0,
-		value:           "1",
+		value:           1,
 		expectedSuccess: false,
 	},
 	{
 		exitCode:        1,
-		value:           "0",
+		value:           0,
 		expectedSuccess: false,
 	},
 }
@@ -38,11 +38,11 @@ func TestIsEqualAssertion(t *testing.T) {
 			},
 		}
 		sut := &StatusAssertion{
-			EqualsTo: spec.value,
+			EqualsTo: &spec.value,
 		}
 		assertionResult := sut.verify(context)
 		if assertionResult.Success() != spec.expectedSuccess {
-			t.Errorf(`status assertion expected %t but got %t for exit code %d (expected equals to %s)`, spec.expectedSuccess, assertionResult.Success(), spec.exitCode, spec.value)
+			t.Errorf(`status assertion expected %t but got %t for exit code %d (expected equals to %d)`, spec.expectedSuccess, assertionResult.Success(), spec.exitCode, spec.value)
 		}
 	}
 }
@@ -50,17 +50,17 @@ func TestIsEqualAssertion(t *testing.T) {
 var statusGreaterThenSpecs = []statusAssertionTestCase{
 	{
 		exitCode:        1,
-		value:           "0",
+		value:           0,
 		expectedSuccess: true,
 	},
 	{
 		exitCode:        1,
-		value:           "1",
+		value:           1,
 		expectedSuccess: false,
 	},
 	{
 		exitCode:        1,
-		value:           "2",
+		value:           2,
 		expectedSuccess: false,
 	},
 }
@@ -75,11 +75,11 @@ func TestGreaterThanAssertion(t *testing.T) {
 			},
 		}
 		sut := &StatusAssertion{
-			GreaterThan: spec.value,
+			GreaterThan: &spec.value,
 		}
 		assertionResult := sut.verify(context)
 		if assertionResult.Success() != spec.expectedSuccess {
-			t.Errorf(`status assertion expected %t but got %t for exit code %d (expected greater than %s)`, spec.expectedSuccess, assertionResult.Success(), spec.exitCode, spec.value)
+			t.Errorf(`status assertion expected %t but got %t for exit code %d (expected greater than %d)`, spec.expectedSuccess, assertionResult.Success(), spec.exitCode, spec.value)
 		}
 	}
 
@@ -88,7 +88,7 @@ func TestGreaterThanAssertion(t *testing.T) {
 var statusLesserThenSpecs = []statusAssertionTestCase{
 	{
 		exitCode:        0,
-		value:           "1",
+		value:           1,
 		expectedSuccess: true,
 	},
 }
@@ -103,11 +103,11 @@ func TestLesserThanAssertion(t *testing.T) {
 			},
 		}
 		sut := &StatusAssertion{
-			LesserThan: spec.value,
+			LesserThan: &spec.value,
 		}
 		assertionResult := sut.verify(context)
 		if assertionResult.Success() != spec.expectedSuccess {
-			t.Errorf(`status assertion expected %t but got %t for exit code %d (expected lesser than %s)`, spec.expectedSuccess, assertionResult.Success(), spec.exitCode, spec.value)
+			t.Errorf(`status assertion expected %t but got %t for exit code %d (expected lesser than %d)`, spec.expectedSuccess, assertionResult.Success(), spec.exitCode, spec.value)
 		}
 	}
 
