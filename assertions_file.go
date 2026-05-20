@@ -136,23 +136,23 @@ func verifyFilesEqualHash(actualPath string, other string) []error {
 }
 
 func verifyFilesEqualText(actualPath string, exp string) []error {
-	errs := []error{}
 	filelines := []string{}
-	files.EachLine(actualPath, func(line string) error {
+	if err := files.EachLine(actualPath, func(line string) error {
 		filelines = append(filelines, line)
 		return nil
-	})
+	}); err != nil {
+		return []error{asInfraError(fmt.Errorf("reading %q: %w", actualPath, err))}
+	}
 	expectedlines := []string{}
-	files.EachLine(exp, func(line string) error {
+	if err := files.EachLine(exp, func(line string) error {
 		expectedlines = append(expectedlines, line)
 		return nil
-	})
+	}); err != nil {
+		return []error{asInfraError(fmt.Errorf("reading %q: %w", exp, err))}
+	}
+	errs := []error{}
 	if len(filelines) != len(expectedlines) {
 		errs = append(errs, fmt.Errorf("EachLine(%s), expected %d lines but got %d", actualPath, len(expectedlines), len(filelines)))
-	}
-	if len(filelines) == 0 || len(expectedlines) == 0 {
-		// probably a missing/unexpected file
-		return errs
 	}
 	for index, actual := range filelines {
 		if len(expectedlines) <= index {
