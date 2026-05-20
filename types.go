@@ -80,7 +80,7 @@ type Spec struct {
 	Expectations  Expectations  `yaml:"expectations"`
 }
 
-// ID returns the dinamically created identifier for a spec.
+// ID returns the dynamically created identifier for a spec.
 func (s Spec) ID() string {
 	return s.id
 }
@@ -88,7 +88,6 @@ func (s Spec) ID() string {
 // FileSystemAssertion is an assertion on files and directories.
 type FileSystemAssertion struct {
 	File string `yaml:"file"`
-	// aggiunta a file
 	Extension FileExtension `yaml:"ext"`
 	Directory string        `yaml:"directory"`
 	Exists    *bool         `yaml:"exists"`
@@ -119,8 +118,7 @@ func (e FileExtension) get() string {
 
 // FileAssertion is an assertion on a given file.
 type FileAssertion struct {
-	Path string `yaml:"path"`
-	// aggiunta a path
+	Path         string        `yaml:"path"`
 	Extension    FileExtension `yaml:"ext"`
 	Exists       bool          `yaml:"exists"`
 	EqualsTo     string        `yaml:"equals_to"`
@@ -146,9 +144,9 @@ type Preconditions struct {
 
 // Command represents the command under test.
 type Command struct {
-	WorkingDir string `yaml:"working_dir"`
-	Cli        string `yaml:"cli"`
-	Exe        string `yaml:"exe"`
+	WorkingDir string            `yaml:"working_dir"`
+	Cli        string            `yaml:"cli"`
+	Exe        string            `yaml:"exe"`
 	Env        map[string]string `yaml:"env"`
 	// added to exe
 	Extension FileExtension `yaml:"ext"`
@@ -165,9 +163,9 @@ func (c Command) String() string {
 
 // StatusAssertion represents an assertion on the status code returned from a command.
 type StatusAssertion struct {
-	EqualsTo    string `yaml:"equals_to"`
-	GreaterThan string `yaml:"greater_than"`
-	LesserThan  string `yaml:"lesser_than"`
+	EqualsTo    *int `yaml:"equals_to"`
+	GreaterThan *int `yaml:"greater_than"`
+	LesserThan  *int `yaml:"lesser_than"`
 }
 
 // OutputAssertion is an assertion on the output of a command: namely standard output and standard error.

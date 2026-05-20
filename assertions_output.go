@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-// OutputAssertion represents
+// verify checks the command output against the assertion's expected values.
 func (a *OutputAssertion) verify(context planContext) AssertionResult {
 	result := AssertionResult{
 		description: fmt.Sprintf(`output %s for %s`, a.id, context.commandResult.execution),
