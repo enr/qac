@@ -79,9 +79,9 @@ func (l *Launcher) execute(plan TestPlan, context planContext) *TestExecutionRep
 	report := &TestExecutionReport{}
 	// report.phase = "plan preconditions"
 	preconditions := plan.Preconditions
-	proceed := l.verifyPreconditions(preconditions, context, report)
+	proceed, failed, total := l.verifyPreconditions(preconditions, context, report)
 	if !proceed {
-		report.addEntryInfo(`preconditions`, fmt.Sprintf("error in plan preconditions, stop plan execution"))
+		report.addEntryInfo("preconditions", fmt.Sprintf("%d of %d preconditions failed, stopping plan execution", failed, total))
 		return report
 	}
 	order := plan.specOrder
@@ -90,14 +90,14 @@ func (l *Launcher) execute(plan TestPlan, context planContext) *TestExecutionRep
 			order = append(order, key)
 		}
 	}
-	total := len(order)
+	numSpecs := len(order)
 	for i, key := range order {
 		spec := plan.Specs[key]
 		spec.id = key
 		context.currentSpec = spec
 		phase := specPhase(spec)
 		start := time.Now()
-		report.openBlock(phase, i+1, total, start)
+		report.openBlock(phase, i+1, numSpecs, start)
 		l.executeSpec(context, report)
 		report.closeBlock(phase, time.Since(start))
 	}
@@ -111,38 +111,37 @@ func specPhase(spec Spec) string {
 	return spec.ID()
 }
 
-func (l *Launcher) verifyPreconditions(preconditions Preconditions, context planContext, report *TestExecutionReport) bool {
+func (l *Launcher) verifyPreconditions(preconditions Preconditions, context planContext, report *TestExecutionReport) (bool, int, int) {
 	fa := preconditions.FileSystemAssertions
-	var assertionResult AssertionResult
 	phase := `preconditions`
 	if context.currentSpec.ID() != "" {
 		phase = fmt.Sprintf(`%s preconditions`, context.currentSpec.ID())
 	}
-	var a assertion
-	var err error
-	proceed := true
+	failed := 0
+	total := len(fa)
 	for _, f := range fa {
-		a, err = f.actualAssertion(context)
+		a, err := f.actualAssertion(context)
 		if err != nil {
 			report.addEntryAsError(phase, err)
-			proceed = false
+			failed++
+			continue
 		}
-		assertionResult = a.verify(context)
-		report.addEntryAsAssertionResult(phase, assertionResult)
-		if !assertionResult.Success() {
-			proceed = false
+		result := a.verify(context)
+		report.addEntryAsAssertionResult(phase, result)
+		if !result.Success() {
+			failed++
 		}
 	}
-	return proceed
+	return failed == 0, failed, total
 }
 
 func (l *Launcher) executeSpec(context planContext, report *TestExecutionReport) {
 	spec := context.currentSpec
 	phase := specPhase(spec)
 	preconditions := spec.Preconditions
-	proceed := l.verifyPreconditions(preconditions, context, report)
+	proceed, failed, total := l.verifyPreconditions(preconditions, context, report)
 	if !proceed {
-		report.addEntrySkipped(phase, fmt.Sprintf("skipped: %s preconditions not met", spec.ID()))
+		report.addEntrySkipped(phase, fmt.Sprintf("skipped: %d of %d preconditions failed", failed, total))
 		return
 	}
 	command := spec.Command
@@ -166,11 +165,11 @@ func (l *Launcher) executeSpec(context planContext, report *TestExecutionReport)
 	report.addEntryAsAssertionResult(phase, ea.verify(context))
 	fa := expectations.FileSystemAssertions
 
-	var a assertion
 	for _, f := range fa {
-		a, err = f.actualAssertion(context)
+		a, err := f.actualAssertion(context)
 		if err != nil {
 			report.addEntryAsError(phase, err)
+			continue
 		}
 		report.addEntryAsAssertionResult(phase, a.verify(context))
 	}
