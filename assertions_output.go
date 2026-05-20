@@ -30,12 +30,12 @@ func (a *OutputAssertion) verify(context planContext) AssertionResult {
 	if a.EqualsToFile != "" {
 		f, err := resolvePath(a.EqualsToFile, context)
 		if err != nil {
-			result.addError(fmt.Errorf("resolving equals_to_file path %q: %w", a.EqualsToFile, err))
+			result.addInfraError(fmt.Errorf("resolving equals_to_file path %q: %w", a.EqualsToFile, err))
 			return result
 		}
 		content, err := ioutil.ReadFile(f)
 		if err != nil {
-			result.addError(fmt.Errorf("reading equals_to_file %q: %w", f, err))
+			result.addInfraError(fmt.Errorf("reading equals_to_file %q: %w", f, err))
 			return result
 		}
 		t := strings.TrimSpace(string(content))

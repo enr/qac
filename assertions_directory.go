@@ -15,7 +15,7 @@ func (a *DirectoryAssertion) verify(context planContext) AssertionResult {
 	}
 	actualPath, err := resolvePath(a.Path, context)
 	if err != nil {
-		result.addError(fmt.Errorf("resolving directory path %q: %w", a.Path, err))
+		result.addInfraError(fmt.Errorf("resolving directory path %q: %w", a.Path, err))
 		return result
 	}
 	fileExists := files.Exists(actualPath)
@@ -42,12 +42,12 @@ func (a *DirectoryAssertion) verify(context planContext) AssertionResult {
 	if a.EqualsTo != "" {
 		eq, err := resolvePath(a.EqualsTo, context)
 		if err != nil {
-			result.addError(fmt.Errorf("resolving equals_to directory %q: %w", a.EqualsTo, err))
+			result.addInfraError(fmt.Errorf("resolving equals_to directory %q: %w", a.EqualsTo, err))
 			return result
 		}
 		otherFiles, err := a.files(eq)
 		if err != nil {
-			result.addError(fmt.Errorf("listing files in equals_to directory %q: %w", eq, err))
+			result.addInfraError(fmt.Errorf("listing files in equals_to directory %q: %w", eq, err))
 			return result
 		}
 		if len(files) != len(otherFiles) {

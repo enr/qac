@@ -41,19 +41,19 @@ func (l *Launcher) ExecuteFile(path string) *TestExecutionReport {
 	report := &TestExecutionReport{}
 	dat, err := ioutil.ReadFile(path)
 	if err != nil {
-		report.addEntryAsError("load", fmt.Errorf("reading test plan %q: %w", path, err))
+		report.addEntryAsError("load", asConfigError(fmt.Errorf("reading test plan %q: %w", path, err)))
 		return report
 	}
 	plan := TestPlan{}
 	dec := yaml.NewDecoder(bytes.NewReader(dat))
 	dec.KnownFields(true)
 	if err = dec.Decode(&plan); err != nil {
-		report.addEntryAsError("load", fmt.Errorf("parsing test plan %q: %w", path, err))
+		report.addEntryAsError("load", asConfigError(fmt.Errorf("parsing test plan %q: %w", path, err)))
 		return report
 	}
 	basedir, err := filepath.Abs(filepath.Dir(path))
 	if err != nil {
-		report.addEntryAsError("load", fmt.Errorf("resolving base directory for %q: %w", path, err))
+		report.addEntryAsError("load", asInfraError(fmt.Errorf("resolving base directory for %q: %w", path, err)))
 		return report
 	}
 	context := planContext{}
@@ -66,7 +66,7 @@ func (l *Launcher) Execute(plan TestPlan) *TestExecutionReport {
 	report := &TestExecutionReport{}
 	basedir, err := os.Getwd()
 	if err != nil {
-		report.addEntryAsError("load", fmt.Errorf("getting working directory: %w", err))
+		report.addEntryAsError("load", asInfraError(fmt.Errorf("getting working directory: %w", err)))
 		return report
 	}
 	context := planContext{}
@@ -138,10 +138,10 @@ func (l *Launcher) executeSpec(context planContext, report *TestExecutionReport)
 	command := spec.Command
 	wd, err := resolvePath(command.WorkingDir, context)
 	if err != nil {
-		report.addEntryAsError(phase, err)
+		report.addEntryAsError(phase, asInfraError(err))
 	}
 	if !files.IsDir(wd) {
-		report.addEntryAsErrorString(phase, fmt.Sprintf(`invalid working dir %s (not found or not dir)`, wd))
+		report.addEntryAsError(phase, asInfraError(fmt.Errorf("invalid working dir %s (not found or not dir)", wd)))
 		return
 	}
 	command.WorkingDir = wd

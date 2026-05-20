@@ -14,8 +14,7 @@ func (a *StatusAssertion) verify(context planContext) AssertionResult {
 	if a.GreaterThan != "" {
 		i, err := strconv.Atoi(a.GreaterThan)
 		if err != nil {
-			result.addError(err)
-			// block
+			result.addConfigError(err)
 			return result
 		}
 		if commandResult.exitCode <= i {
@@ -26,8 +25,7 @@ func (a *StatusAssertion) verify(context planContext) AssertionResult {
 	if a.LesserThan != "" {
 		i, err := strconv.Atoi(a.LesserThan)
 		if err != nil {
-			result.addError(err)
-			// block
+			result.addConfigError(err)
 			return result
 		}
 		if commandResult.exitCode >= i {
@@ -38,8 +36,7 @@ func (a *StatusAssertion) verify(context planContext) AssertionResult {
 	if a.EqualsTo != "" {
 		i, err := strconv.Atoi(a.EqualsTo)
 		if err != nil {
-			result.addError(err)
-			// block
+			result.addConfigError(err)
 			return result
 		}
 		if commandResult.exitCode != i {
