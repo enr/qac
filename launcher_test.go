@@ -26,10 +26,7 @@ func (e *fixedValueExecutor) execute(c Command) executionResult {
 }
 
 func randomExitCode() int {
-	rand.Seed(time.Now().UnixNano())
-	min := 0
-	max := 128
-	return (rand.Intn(max-min+1) + min)
+	return rand.Intn(129)
 }
 
 func TestSpecificationWithWrongAssertions(t *testing.T) {
