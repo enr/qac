@@ -33,7 +33,7 @@ func TestStatusAssertionInvalidEqualsTo(t *testing.T) {
 	sut := &StatusAssertion{EqualsTo: "zero"}
 	r := sut.verify(ctx)
 	if r.Success() {
-		t.Fatal("expected failure for non-numeric equals_to value")
+		t.Error("expected failure for non-numeric equals_to value")
 	}
 }
 
@@ -42,7 +42,7 @@ func TestStatusAssertionInvalidGreaterThan(t *testing.T) {
 	sut := &StatusAssertion{GreaterThan: "not-a-number"}
 	r := sut.verify(ctx)
 	if r.Success() {
-		t.Fatal("expected failure for non-numeric greater_than value")
+		t.Error("expected failure for non-numeric greater_than value")
 	}
 }
 
@@ -51,7 +51,7 @@ func TestStatusAssertionInvalidLesserThan(t *testing.T) {
 	sut := &StatusAssertion{LesserThan: "not-a-number"}
 	r := sut.verify(ctx)
 	if r.Success() {
-		t.Fatal("expected failure for non-numeric lesser_than value")
+		t.Error("expected failure for non-numeric lesser_than value")
 	}
 }
 
@@ -69,7 +69,7 @@ func TestStatusAssertion_CommandError_NoConstraint(t *testing.T) {
 	sut := &StatusAssertion{}
 	r := sut.verify(ctx)
 	if r.Success() {
-		t.Fatal("expected failure when command errored with no exit-code constraints")
+		t.Error("expected failure when command errored with no exit-code constraints")
 	}
 }
 
@@ -85,7 +85,7 @@ func TestStatusAssertion_CommandError_EqualsToZero_NotAcceptable(t *testing.T) {
 	sut := &StatusAssertion{EqualsTo: "0"}
 	r := sut.verify(ctx)
 	if r.Success() {
-		t.Fatal("expected failure: equals_to 0 does not make command errors acceptable")
+		t.Error("expected failure: equals_to 0 does not make command errors acceptable")
 	}
 }
 
@@ -100,7 +100,7 @@ func TestStatusAssertion_CommandError_EqualsToNonZero_Acceptable(t *testing.T) {
 	sut := &StatusAssertion{EqualsTo: "1"}
 	r := sut.verify(ctx)
 	if !r.Success() {
-		t.Fatalf("expected success when exit matches expected non-zero value, got: %v", r.Errors())
+		t.Errorf("expected success when exit matches expected non-zero value, got: %v", r.Errors())
 	}
 }
 
@@ -114,6 +114,6 @@ func TestStatusAssertion_CommandError_GreaterThan_Acceptable(t *testing.T) {
 	sut := &StatusAssertion{GreaterThan: "1"}
 	r := sut.verify(ctx)
 	if !r.Success() {
-		t.Fatalf("expected success: greater_than makes command errors acceptable, got: %v", r.Errors())
+		t.Errorf("expected success: greater_than makes command errors acceptable, got: %v", r.Errors())
 	}
 }
