@@ -87,7 +87,7 @@ func (s Spec) ID() string {
 
 // FileSystemAssertion is an assertion on files and directories.
 type FileSystemAssertion struct {
-	File string `yaml:"file"`
+	File      string        `yaml:"file"`
 	Extension FileExtension `yaml:"ext"`
 	Directory string        `yaml:"directory"`
 	Exists    *bool         `yaml:"exists"`
