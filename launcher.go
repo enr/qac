@@ -148,6 +148,7 @@ func (l *Launcher) executeSpec(context planContext, report *TestExecutionReport)
 	wd, err := resolvePath(command.WorkingDir, context)
 	if err != nil {
 		report.addEntryAsError(phase, asInfraError(err))
+		return
 	}
 	if !files.IsDir(wd) {
 		report.addEntryAsError(phase, asInfraError(fmt.Errorf("invalid working dir %s (not found or not dir)", wd)))
