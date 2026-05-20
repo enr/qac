@@ -50,7 +50,10 @@ func (l *Launcher) ExecuteFile(path string) *TestExecutionReport {
 	if err != nil {
 		log.Fatalf("parsing test plan %q: %v", path, err)
 	}
-	basedir, _ := filepath.Abs(filepath.Dir(path))
+	basedir, err := filepath.Abs(filepath.Dir(path))
+	if err != nil {
+		log.Fatalf("resolving base directory for %q: %v", path, err)
+	}
 	context := planContext{}
 	context.basedir = basedir
 	return l.execute(plan, context)
