@@ -1,0 +1,32 @@
+specs:
+  success:
+    description: true always exits 0
+    command:
+      cli: "true"
+    expectations:
+      status:
+        equals_to: "0"
+
+  failure:
+    description: false always exits 1
+    command:
+      cli: "false"
+    expectations:
+      status:
+        equals_to: "1"
+
+  greater_than:
+    description: false exit code is greater than 0
+    command:
+      cli: "false"
+    expectations:
+      status:
+        greater_than: "0"
+
+  lesser_than:
+    description: true exit code is less than 1
+    command:
+      cli: "true"
+    expectations:
+      status:
+        lesser_than: "1"

@@ -1,0 +1,42 @@
+preconditions:
+  fs:
+    - file: testdata/sample.txt
+
+specs:
+  line_count:
+    description: wc -l counts lines and includes the filename in output
+    command:
+      cli: wc -l testdata/sample.txt
+    expectations:
+      status:
+        equals_to: "0"
+      output:
+        stdout:
+          contains_all:
+            - "3"
+            - testdata/sample.txt
+        stderr:
+          is_empty: true
+
+  word_count:
+    description: wc -w counts words and includes the filename in output
+    command:
+      cli: wc -w testdata/sample.txt
+    expectations:
+      status:
+        equals_to: "0"
+      output:
+        stdout:
+          contains_all:
+            - "9"
+            - testdata/sample.txt
+        stderr:
+          is_empty: true
+
+  nonexistent_file:
+    description: wc exits non-zero for a missing file
+    command:
+      cli: wc -l testdata/nonexistent-file.txt
+    expectations:
+      status:
+        greater_than: "0"

@@ -1,0 +1,44 @@
+preconditions:
+  fs:
+    - file: testdata/sample.txt
+
+specs:
+  read_file:
+    description: cat outputs the exact contents of a text file
+    command:
+      cli: cat testdata/sample.txt
+    expectations:
+      status:
+        equals_to: "0"
+      output:
+        stdout:
+          equals_to_file: testdata/sample.txt
+        stderr:
+          is_empty: true
+
+  content_check:
+    description: cat output contains known words from the file
+    command:
+      cli: cat testdata/sample.txt
+    expectations:
+      status:
+        equals_to: "0"
+      output:
+        stdout:
+          contains_all:
+            - alpha
+            - epsilon
+            - iota
+        stderr:
+          is_empty: true
+
+  missing_file:
+    description: cat exits non-zero when the file does not exist
+    command:
+      cli: cat testdata/nonexistent-file.txt
+    expectations:
+      status:
+        greater_than: "0"
+      output:
+        stdout:
+          is_empty: true

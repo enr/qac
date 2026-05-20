@@ -1,0 +1,64 @@
+specs:
+  basic:
+    description: echo outputs the argument on stdout and nothing on stderr
+    command:
+      cli: echo hello
+    expectations:
+      status:
+        equals_to: "0"
+      output:
+        stdout:
+          equals_to: hello
+        stderr:
+          is_empty: true
+
+  multiple_words:
+    description: all words passed to echo appear in stdout
+    command:
+      cli: echo foo bar baz
+    expectations:
+      status:
+        equals_to: "0"
+      output:
+        stdout:
+          contains_all:
+            - foo
+            - bar
+            - baz
+
+  with_env:
+    description: echo expands environment variables set via the env map
+    command:
+      cli: echo $E2E_GREETING
+      env:
+        E2E_GREETING: hello-from-env
+    expectations:
+      status:
+        equals_to: "0"
+      output:
+        stdout:
+          equals_to: hello-from-env
+        stderr:
+          is_empty: true
+
+  starts_with_check:
+    description: stdout starts_with assertion
+    command:
+      cli: echo "first second third"
+    expectations:
+      status:
+        equals_to: "0"
+      output:
+        stdout:
+          starts_with: first
+
+  ends_with_check:
+    description: stdout ends_with assertion
+    command:
+      cli: echo "first second third"
+    expectations:
+      status:
+        equals_to: "0"
+      output:
+        stdout:
+          ends_with: third

@@ -68,4 +68,6 @@ echo "--- gocyclo"
 diff <(gocyclo -over 25 *.go) <(printf "")
 echo "--- go test"
 go test -cover ./...
+echo "--- e2e tests"
+go test -v ./e2e/...
 

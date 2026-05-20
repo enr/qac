@@ -1,0 +1,27 @@
+specs:
+  default_workdir:
+    description: pwd in the default working dir ends with the e2e directory name
+    command:
+      cli: pwd
+    expectations:
+      status:
+        equals_to: "0"
+      output:
+        stdout:
+          ends_with: /e2e
+        stderr:
+          is_empty: true
+
+  explicit_workdir:
+    description: pwd respects an explicit working_dir
+    command:
+      working_dir: testdata
+      cli: pwd
+    expectations:
+      status:
+        equals_to: "0"
+      output:
+        stdout:
+          ends_with: /testdata
+        stderr:
+          is_empty: true
