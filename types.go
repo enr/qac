@@ -1,11 +1,12 @@
 package qac
 
 import (
+	"bytes"
 	"fmt"
 	"runtime"
 	"strings"
 
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
 // TestPlan represents the full set of tests on a program.
@@ -15,32 +16,59 @@ type TestPlan struct {
 	specOrder     []string
 }
 
-// UnmarshalYAML preserves the declaration order of specs from the YAML source.
-func (tp *TestPlan) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	type rawPlan struct {
-		Preconditions Preconditions `yaml:"preconditions"`
-		Specs         yaml.MapSlice `yaml:"specs"`
+// UnmarshalYAML preserves the declaration order of specs from the YAML source
+// and rejects unknown fields.
+func (tp *TestPlan) UnmarshalYAML(value *yaml.Node) error {
+	if value.Kind != yaml.MappingNode {
+		return fmt.Errorf("line %d: expected mapping for plan", value.Line)
 	}
-	raw := rawPlan{}
-	if err := unmarshal(&raw); err != nil {
-		return err
+	known := map[string]bool{"preconditions": true, "specs": true}
+	for i := 0; i < len(value.Content)-1; i += 2 {
+		k := value.Content[i].Value
+		if !known[k] {
+			return fmt.Errorf("line %d: unknown field %q in plan", value.Content[i].Line, k)
+		}
 	}
-	tp.Preconditions = raw.Preconditions
-	tp.Specs = make(map[string]Spec, len(raw.Specs))
-	for _, item := range raw.Specs {
-		key := fmt.Sprintf("%v", item.Key)
-		val, err := yaml.Marshal(item.Value)
-		if err != nil {
-			return err
+	for i := 0; i < len(value.Content)-1; i += 2 {
+		keyNode := value.Content[i]
+		valNode := value.Content[i+1]
+		switch keyNode.Value {
+		case "preconditions":
+			if err := strictDecodeNode(valNode, &tp.Preconditions); err != nil {
+				return err
+			}
+		case "specs":
+			if valNode.Kind != yaml.MappingNode {
+				return fmt.Errorf("line %d: specs must be a mapping", valNode.Line)
+			}
+			tp.Specs = make(map[string]Spec, len(valNode.Content)/2)
+			for j := 0; j < len(valNode.Content)-1; j += 2 {
+				specKeyNode := valNode.Content[j]
+				specValNode := valNode.Content[j+1]
+				key := specKeyNode.Value
+				var spec Spec
+				if err := strictDecodeNode(specValNode, &spec); err != nil {
+					return fmt.Errorf("spec %q: %w", key, err)
+				}
+				tp.Specs[key] = spec
+				tp.specOrder = append(tp.specOrder, key)
+			}
 		}
-		var spec Spec
-		if err := yaml.Unmarshal(val, &spec); err != nil {
-			return err
-		}
-		tp.Specs[key] = spec
-		tp.specOrder = append(tp.specOrder, key)
 	}
 	return nil
+}
+
+// strictDecodeNode decodes a YAML node into v, rejecting unknown fields.
+func strictDecodeNode(node *yaml.Node, v interface{}) error {
+	var buf bytes.Buffer
+	enc := yaml.NewEncoder(&buf)
+	if err := enc.Encode(node); err != nil {
+		return err
+	}
+	enc.Close()
+	dec := yaml.NewDecoder(&buf)
+	dec.KnownFields(true)
+	return dec.Decode(v)
 }
 
 // Spec is the single test.

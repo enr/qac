@@ -6,7 +6,7 @@ require (
 	github.com/enr/go-files v0.3.0
 	github.com/enr/runcmd v0.6.1
 	github.com/mitchellh/go-homedir v1.1.0
-	gopkg.in/yaml.v2 v2.4.0
+	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
@@ -15,4 +15,5 @@ require (
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/subosito/gotenv v1.2.0 // indirect
 	golang.org/x/text v0.37.0 // indirect
+	gopkg.in/yaml.v2 v2.4.0 // indirect
 )

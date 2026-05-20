@@ -10,7 +10,9 @@ func (a *FileSystemAssertion) actualAssertion(context planContext) (assertion, e
 	}
 	shouldExists := a.Exists == nil || *a.Exists
 	if fa {
-		// TODO check invalid fields
+		if len(a.ContainsExactly) > 0 {
+			return nil, fmt.Errorf("field contains_exactly is not valid for file assertion %q", a.File)
+		}
 		return &FileAssertion{
 			Path:         a.File,
 			Extension:    a.Extension,
@@ -21,7 +23,9 @@ func (a *FileSystemAssertion) actualAssertion(context planContext) (assertion, e
 			TextEqualsTo: a.TextEqualsTo,
 		}, nil
 	}
-	// TODO check invalid fields
+	if a.TextEqualsTo != "" {
+		return nil, fmt.Errorf("field text_equals_to is not valid for directory assertion %q", a.Directory)
+	}
 	return &DirectoryAssertion{
 		Path:            a.Directory,
 		Exists:          shouldExists,

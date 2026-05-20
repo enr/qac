@@ -1,6 +1,7 @@
 package qac
 
 import (
+	"bytes"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -8,7 +9,7 @@ import (
 	"path/filepath"
 
 	"github.com/enr/go-files/files"
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
 type planContext struct {
@@ -43,7 +44,9 @@ func (l *Launcher) ExecuteFile(path string) *TestExecutionReport {
 		log.Fatalf("error: %v", err)
 	}
 	plan := TestPlan{}
-	err = yaml.Unmarshal(dat, &plan)
+	dec := yaml.NewDecoder(bytes.NewReader(dat))
+	dec.KnownFields(true)
+	err = dec.Decode(&plan)
 	if err != nil {
 		log.Fatalf("error: %v", err)
 	}
