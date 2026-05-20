@@ -124,6 +124,9 @@ func (a *DirectoryAssertion) verifyContainsExactly(actualPath string, files []st
 func (a *DirectoryAssertion) files(dir string) ([]string, error) {
 	aa := []string{}
 	err := filepath.Walk(dir, func(path string, f os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
 		if f.IsDir() {
 			return nil
 		}
