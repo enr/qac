@@ -61,50 +61,18 @@ func (a *DirectoryAssertion) verify(context planContext) AssertionResult {
 		}
 	}
 	if len(a.ContainsExactly) > 0 {
-		// if len(files) != len(a.ContainsExactly) {
-		// 	result.addErrorf("expected %s contains %d files but got %d\n%v%v", actualPath, len(a.ContainsExactly), len(files),
-		// 		a.ContainsExactly, files)
-		// }
-		// for _, f := range files {
-		// 	if !sliceContains(a.ContainsExactly, f) {
-		// 		result.addErrorf(`file %s not in expected %q`, f, a.ContainsExactly)
-		// 	}
-		// }
-		// for _, f := range a.ContainsExactly {
-		// 	if !sliceContains(files, f) {
-		// 		result.addErrorf(`file %s not found in actual dir content %q`, f, files)
-		// 	}
-		// }
-		a.verifyContainsExactly(actualPath, files, result)
+		a.verifyContainsExactly(actualPath, files, &result)
 	}
 	if len(a.ContainsAny) > 0 {
-		// miss := true
-		// for _, f := range a.ContainsAny {
-		// 	if sliceContains(files, f) {
-		// 		miss = false
-		// 	}
-		// }
-		// if miss {
-		// 	result.addErrorf(`directory does not contain any of %q`, files)
-		// }
-		a.verifyContainsAny(actualPath, files, result)
+		a.verifyContainsAny(actualPath, files, &result)
 	}
 	if len(a.ContainsAll) > 0 {
-		// missing := []string{}
-		// for _, f := range a.ContainsAll {
-		// 	if !sliceContains(files, f) {
-		// 		missing = append(missing, f)
-		// 	}
-		// }
-		// if len(missing) > 0 {
-		// 	result.addErrorf(`missing files: %q`, missing)
-		// }
-		a.verifyContainsAll(actualPath, files, result)
+		a.verifyContainsAll(actualPath, files, &result)
 	}
 	return result
 }
 
-func (a *DirectoryAssertion) verifyContainsAll(actualPath string, files []string, result AssertionResult) {
+func (a *DirectoryAssertion) verifyContainsAll(actualPath string, files []string, result *AssertionResult) {
 	missing := []string{}
 	for _, f := range a.ContainsAll {
 		if !sliceContains(files, f) {
@@ -116,7 +84,7 @@ func (a *DirectoryAssertion) verifyContainsAll(actualPath string, files []string
 	}
 }
 
-func (a *DirectoryAssertion) verifyContainsAny(actualPath string, files []string, result AssertionResult) {
+func (a *DirectoryAssertion) verifyContainsAny(actualPath string, files []string, result *AssertionResult) {
 	miss := true
 	for _, f := range a.ContainsAny {
 		if sliceContains(files, f) {
@@ -128,7 +96,7 @@ func (a *DirectoryAssertion) verifyContainsAny(actualPath string, files []string
 	}
 }
 
-func (a *DirectoryAssertion) verifyContainsExactly(actualPath string, files []string, result AssertionResult) {
+func (a *DirectoryAssertion) verifyContainsExactly(actualPath string, files []string, result *AssertionResult) {
 	if len(files) != len(a.ContainsExactly) {
 		result.addErrorf("expected %s contains %d files but got %d\n%v%v", actualPath, len(a.ContainsExactly), len(files),
 			a.ContainsExactly, files)
