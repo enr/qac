@@ -12,16 +12,16 @@ type AssertionResult struct {
 }
 
 func (r *AssertionResult) addErrorf(format string, a ...interface{}) {
-	r.errors = append(r.errors, &QacError{
+	r.errors = append(r.errors, &Error{
 		Kind: KindAssertionFailure,
 		msg:  fmt.Sprintf(format, a...),
 	})
 }
 
 func (r *AssertionResult) addError(err error) {
-	var qe *QacError
+	var qe *Error
 	if !errors.As(err, &qe) {
-		err = &QacError{Kind: KindAssertionFailure, Cause: err, msg: err.Error()}
+		err = &Error{Kind: KindAssertionFailure, Cause: err, msg: err.Error()}
 	}
 	r.errors = append(r.errors, err)
 }

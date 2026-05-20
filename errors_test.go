@@ -9,9 +9,9 @@ import (
 func TestAddErrorfIsAssertionFailure(t *testing.T) {
 	var r AssertionResult
 	r.addErrorf("expected %d got %d", 1, 2)
-	var qe *QacError
+	var qe *Error
 	if !errors.As(r.errors[0], &qe) {
-		t.Fatal("expected *QacError")
+		t.Fatal("expected *Error")
 	}
 	if qe.Kind != KindAssertionFailure {
 		t.Errorf("expected KindAssertionFailure, got %v", qe.Kind)
@@ -21,9 +21,9 @@ func TestAddErrorfIsAssertionFailure(t *testing.T) {
 func TestAddInfraErrorIsInfrastructure(t *testing.T) {
 	var r AssertionResult
 	r.addInfraError(fmt.Errorf("read /tmp/x: permission denied"))
-	var qe *QacError
+	var qe *Error
 	if !errors.As(r.errors[0], &qe) {
-		t.Fatal("expected *QacError")
+		t.Fatal("expected *Error")
 	}
 	if qe.Kind != KindInfrastructure {
 		t.Errorf("expected KindInfrastructure, got %v", qe.Kind)
@@ -33,9 +33,9 @@ func TestAddInfraErrorIsInfrastructure(t *testing.T) {
 func TestAddConfigErrorIsConfiguration(t *testing.T) {
 	var r AssertionResult
 	r.addConfigError(fmt.Errorf("strconv.Atoi: parsing \"abc\""))
-	var qe *QacError
+	var qe *Error
 	if !errors.As(r.errors[0], &qe) {
-		t.Fatal("expected *QacError")
+		t.Fatal("expected *Error")
 	}
 	if qe.Kind != KindConfiguration {
 		t.Errorf("expected KindConfiguration, got %v", qe.Kind)
@@ -45,22 +45,22 @@ func TestAddConfigErrorIsConfiguration(t *testing.T) {
 func TestAddErrorWrapsPlainAsAssertionFailure(t *testing.T) {
 	var r AssertionResult
 	r.addError(fmt.Errorf("plain error"))
-	var qe *QacError
+	var qe *Error
 	if !errors.As(r.errors[0], &qe) {
-		t.Fatal("expected plain error to be wrapped as *QacError")
+		t.Fatal("expected plain error to be wrapped as *Error")
 	}
 	if qe.Kind != KindAssertionFailure {
 		t.Errorf("expected KindAssertionFailure for plain error, got %v", qe.Kind)
 	}
 }
 
-func TestAddErrorPreservesExistingQacErrorKind(t *testing.T) {
+func TestAddErrorPreservesExistingErrorKind(t *testing.T) {
 	var r AssertionResult
 	original := asInfraError(fmt.Errorf("disk full"))
 	r.addError(original)
-	var qe *QacError
+	var qe *Error
 	if !errors.As(r.errors[0], &qe) {
-		t.Fatal("expected *QacError")
+		t.Fatal("expected *Error")
 	}
 	if qe.Kind != KindInfrastructure {
 		t.Errorf("expected kind to be preserved as KindInfrastructure, got %v", qe.Kind)
@@ -74,19 +74,19 @@ func TestAddErrorsWrapsEachElement(t *testing.T) {
 		t.Fatalf("expected 2 errors, got %d", len(r.errors))
 	}
 	for i, err := range r.errors {
-		var qe *QacError
+		var qe *Error
 		if !errors.As(err, &qe) {
-			t.Errorf("error %d: expected *QacError", i)
+			t.Errorf("error %d: expected *Error", i)
 		}
 	}
 }
 
-func TestQacErrorUnwrapChain(t *testing.T) {
+func TestErrorUnwrapChain(t *testing.T) {
 	cause := fmt.Errorf("original cause")
 	wrapped := fmt.Errorf("context: %w", cause)
 	qe := asInfraError(wrapped)
 	if !errors.Is(qe, cause) {
-		t.Error("errors.Is should find cause through QacError.Unwrap chain")
+		t.Error("errors.Is should find cause through Error.Unwrap chain")
 	}
 }
 

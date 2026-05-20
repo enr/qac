@@ -126,7 +126,7 @@ func verifyFilesEqualHash(actualPath string, other string) []error {
 		return []error{asInfraError(fmt.Errorf("hashing expected file %q: %w", other, err))}
 	}
 	if hash1 != hash2 {
-		return []error{&QacError{
+		return []error{&Error{
 			Kind: KindAssertionFailure,
 			msg:  fmt.Sprintf("File %s [%s] differs from\n%s [%s]", actualPath, hash1, other, hash2),
 		}}
