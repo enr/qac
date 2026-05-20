@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/enr/go-files/files"
 	"gopkg.in/yaml.v3"
@@ -89,13 +90,25 @@ func (l *Launcher) execute(plan TestPlan, context planContext) *TestExecutionRep
 			order = append(order, key)
 		}
 	}
-	for _, key := range order {
+	total := len(order)
+	for i, key := range order {
 		spec := plan.Specs[key]
 		spec.id = key
 		context.currentSpec = spec
+		phase := specPhase(spec)
+		start := time.Now()
+		report.openBlock(phase, i+1, total, start)
 		l.executeSpec(context, report)
+		report.closeBlock(phase, time.Since(start))
 	}
 	return report
+}
+
+func specPhase(spec Spec) string {
+	if spec.Description != "" {
+		return spec.ID() + " : " + spec.Description
+	}
+	return spec.ID()
 }
 
 func (l *Launcher) verifyPreconditions(preconditions Preconditions, context planContext, report *TestExecutionReport) bool {
@@ -125,15 +138,12 @@ func (l *Launcher) verifyPreconditions(preconditions Preconditions, context plan
 
 func (l *Launcher) executeSpec(context planContext, report *TestExecutionReport) {
 	spec := context.currentSpec
+	phase := specPhase(spec)
 	preconditions := spec.Preconditions
 	proceed := l.verifyPreconditions(preconditions, context, report)
 	if !proceed {
-		report.addEntryInfo(`preconditions`, fmt.Sprintf("error in spec %s preconditions, stop spec execution", spec.ID()))
+		report.addEntrySkipped(phase, fmt.Sprintf("skipped: %s preconditions not met", spec.ID()))
 		return
-	}
-	phase := fmt.Sprintf(`%s`, spec.ID())
-	if spec.Description != "" {
-		phase = fmt.Sprintf(`%s : %s`, phase, spec.Description)
 	}
 	command := spec.Command
 	wd, err := resolvePath(command.WorkingDir, context)
