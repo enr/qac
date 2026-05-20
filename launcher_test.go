@@ -32,13 +32,12 @@ func randomExitCode() int {
 	return (rand.Intn(max-min+1) + min)
 }
 
-func ignoreTestSpecificationError(t *testing.T) {
+func TestSpecificationWithWrongAssertions(t *testing.T) {
 	stdout := fmt.Sprintf(`stdout-%d`, time.Now().UnixNano())
 	stderr := fmt.Sprintf(`stderr-%d`, time.Now().UnixNano())
 
 	e := &fixedValueExecutor{
-		success:  true,
-		exitCode: randomExitCode(),
+		exitCode: 1, // non-zero so the EqualsTo:"0" status assertion always fails
 		stdout:   stdout,
 		stderr:   stderr,
 	}
