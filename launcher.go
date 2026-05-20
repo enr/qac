@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"os"
 	"path/filepath"
 
@@ -39,20 +38,23 @@ type Launcher struct {
 
 // ExecuteFile run tests loaded from a file.
 func (l *Launcher) ExecuteFile(path string) *TestExecutionReport {
+	report := &TestExecutionReport{}
 	dat, err := ioutil.ReadFile(path)
 	if err != nil {
-		log.Fatalf("reading test plan %q: %v", path, err)
+		report.addEntryAsError("load", fmt.Errorf("reading test plan %q: %w", path, err))
+		return report
 	}
 	plan := TestPlan{}
 	dec := yaml.NewDecoder(bytes.NewReader(dat))
 	dec.KnownFields(true)
-	err = dec.Decode(&plan)
-	if err != nil {
-		log.Fatalf("parsing test plan %q: %v", path, err)
+	if err = dec.Decode(&plan); err != nil {
+		report.addEntryAsError("load", fmt.Errorf("parsing test plan %q: %w", path, err))
+		return report
 	}
 	basedir, err := filepath.Abs(filepath.Dir(path))
 	if err != nil {
-		log.Fatalf("resolving base directory for %q: %v", path, err)
+		report.addEntryAsError("load", fmt.Errorf("resolving base directory for %q: %w", path, err))
+		return report
 	}
 	context := planContext{}
 	context.basedir = basedir
@@ -61,12 +63,14 @@ func (l *Launcher) ExecuteFile(path string) *TestExecutionReport {
 
 // Execute run tests loaded from a TestPlan.
 func (l *Launcher) Execute(plan TestPlan) *TestExecutionReport {
-	path, err := os.Getwd()
+	report := &TestExecutionReport{}
+	basedir, err := os.Getwd()
 	if err != nil {
-		log.Println(err)
+		report.addEntryAsError("load", fmt.Errorf("getting working directory: %w", err))
+		return report
 	}
 	context := planContext{}
-	context.basedir = path
+	context.basedir = basedir
 	return l.execute(plan, context)
 }
 
@@ -138,7 +142,6 @@ func (l *Launcher) executeSpec(context planContext, report *TestExecutionReport)
 	}
 	if !files.IsDir(wd) {
 		report.addEntryAsErrorString(phase, fmt.Sprintf(`invalid working dir %s (not found or not dir)`, wd))
-		fmt.Println("invalid working dir... stop spec...")
 		return
 	}
 	command.WorkingDir = wd
