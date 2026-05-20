@@ -82,7 +82,7 @@ func (a *FileAssertion) verify(context planContext) AssertionResult {
 		cf := string(content)
 		for _, t := range a.ContainsAll {
 			if !strings.Contains(cf, t) {
-				result.addError(fmt.Errorf("%s file\n%s\ndoes not contain:\n%s", actualPath, cf, t))
+				result.addError(fmt.Errorf("%s file\n%s\ndoes not contain:\n%s", actualPath, snippet(cf), t))
 			}
 		}
 	}
@@ -93,15 +93,8 @@ func (a *FileAssertion) verify(context planContext) AssertionResult {
 			return result
 		}
 		cf := string(content)
-		// fail := true
-		// for _, t := range a.ContainsAny {
-		// 	if strings.Contains(cf, t) {
-		// 		fail = false
-		// 		break
-		// 	}
-		// }
 		if a.failContainsAny(cf) {
-			result.addError(fmt.Errorf("%s file\n%s\ndoes not contain any of :\n%q", actualPath, cf, a.ContainsAny))
+			result.addError(fmt.Errorf("%s file\n%s\ndoes not contain any of:\n%q", actualPath, snippet(cf), a.ContainsAny))
 		}
 	}
 
