@@ -28,3 +28,6 @@ IF DEFINED SDLC_GO_VENDOR (
 cd %project_dir%
 
 call go test -v -cover ./...
+
+echo --- e2e tests
+call go test -v ./e2e/...

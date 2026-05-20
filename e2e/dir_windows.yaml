@@ -1,0 +1,34 @@
+preconditions:
+  fs:
+    - directory: testdata
+
+specs:
+  list_subdir:
+    description: dir lists files inside a subdirectory
+    command:
+      cli: dir testdata
+    expectations:
+      status:
+        equals_to: "0"
+      output:
+        stdout:
+          contains_all:
+            - sample.txt
+        stderr:
+          is_empty: true
+
+  list_current:
+    description: dir with no arguments lists the current working directory
+    command:
+      cli: dir
+    expectations:
+      status:
+        equals_to: "0"
+      output:
+        stdout:
+          contains_all:
+            - echo_windows.yaml
+            - type_windows.yaml
+            - testdata
+        stderr:
+          is_empty: true

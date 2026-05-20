@@ -1,0 +1,29 @@
+specs:
+  default_workdir:
+    description: cd with no arguments prints the current working directory
+    command:
+      cli: cd
+    expectations:
+      status:
+        equals_to: "0"
+      output:
+        stdout:
+          contains_all:
+            - e2e
+        stderr:
+          is_empty: true
+
+  explicit_workdir:
+    description: cd respects an explicit working_dir override
+    command:
+      working_dir: testdata
+      cli: cd
+    expectations:
+      status:
+        equals_to: "0"
+      output:
+        stdout:
+          contains_all:
+            - testdata
+        stderr:
+          is_empty: true

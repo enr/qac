@@ -1,0 +1,24 @@
+specs:
+  success:
+    description: echo always exits 0
+    command:
+      cli: echo test
+    expectations:
+      status:
+        equals_to: "0"
+
+  failure:
+    description: type on a nonexistent file exits non-zero
+    command:
+      cli: type nonexistent_xyz_abc.txt
+    expectations:
+      status:
+        greater_than: "0"
+
+  lesser_than:
+    description: echo exit code is less than 1
+    command:
+      cli: echo test
+    expectations:
+      status:
+        lesser_than: "1"

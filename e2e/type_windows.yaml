@@ -1,0 +1,31 @@
+preconditions:
+  fs:
+    - file: testdata/sample.txt
+
+specs:
+  content_check:
+    description: type outputs known words from the file
+    command:
+      cli: type testdata\sample.txt
+    expectations:
+      status:
+        equals_to: "0"
+      output:
+        stdout:
+          contains_all:
+            - alpha
+            - epsilon
+            - iota
+        stderr:
+          is_empty: true
+
+  missing_file:
+    description: type exits non-zero when the file does not exist
+    command:
+      cli: type testdata\nonexistent-file.txt
+    expectations:
+      status:
+        greater_than: "0"
+      output:
+        stdout:
+          is_empty: true
