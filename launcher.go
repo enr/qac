@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/enr/go-files/files"
@@ -83,13 +84,26 @@ func (l *Launcher) Execute(plan TestPlan) *TestExecutionReport {
 
 func (l *Launcher) execute(plan TestPlan, context planContext) *TestExecutionReport {
 	report := &TestExecutionReport{}
-	// report.phase = "plan preconditions"
+
+	// Plan teardown always runs at the end, even if preconditions, setup or specs fail.
+	if len(plan.Teardown) > 0 {
+		defer l.runCommands(plan.Teardown, "teardown", context, report, false)
+	}
+
 	preconditions := plan.Preconditions
 	proceed, failed, total := l.verifyPreconditions(preconditions, context, report)
 	if !proceed {
 		report.addEntryInfo("preconditions", fmt.Sprintf("%d of %d preconditions failed, stopping plan execution", failed, total))
 		return report
 	}
+
+	// Plan setup: stop specs (but not teardown) on first failure.
+	if len(plan.Setup) > 0 {
+		if !l.runCommands(plan.Setup, "setup", context, report, true) {
+			return report
+		}
+	}
+
 	order := plan.specOrder
 	if len(order) == 0 {
 		for key := range plan.Specs {
@@ -108,6 +122,52 @@ func (l *Launcher) execute(plan TestPlan, context planContext) *TestExecutionRep
 		report.closeBlock(phase, time.Since(start))
 	}
 	return report
+}
+
+// runCommands runs each command in order, reporting failures into the given phase.
+// If stopOnFailure is true it returns false on the first failed command; otherwise
+// it runs all commands and returns whether all succeeded.
+func (l *Launcher) runCommands(commands []Command, phase string, ctx planContext, report *TestExecutionReport, stopOnFailure bool) bool {
+	allOk := true
+	for _, cmd := range commands {
+		wd, err := resolvePath(cmd.WorkingDir, ctx)
+		if err != nil {
+			report.addEntryAsError(phase, asInfraError(err))
+			allOk = false
+			if stopOnFailure {
+				return false
+			}
+			continue
+		}
+		if !files.IsDir(wd) {
+			report.addEntryAsError(phase, asInfraError(fmt.Errorf("invalid working dir %s (not found or not dir)", wd)))
+			allOk = false
+			if stopOnFailure {
+				return false
+			}
+			continue
+		}
+		cmd.WorkingDir = wd
+		result := l.executor.execute(cmd)
+		if result.timedOut {
+			report.addEntryTimedOut(phase, cmd.Timeout)
+			allOk = false
+			if stopOnFailure {
+				return false
+			}
+		} else if !result.success {
+			msg := fmt.Sprintf("command failed (exit %d): %s", result.exitCode, result.execution)
+			if s := strings.TrimSpace(result.stderr); s != "" {
+				msg += "\nstderr: " + s
+			}
+			report.addEntryAsError(phase, fmt.Errorf("%s", msg))
+			allOk = false
+			if stopOnFailure {
+				return false
+			}
+		}
+	}
+	return allOk
 }
 
 func specPhase(spec Spec) string {
@@ -153,6 +213,16 @@ func (l *Launcher) executeSpec(context planContext, report *TestExecutionReport)
 	if !proceed {
 		report.addEntrySkipped(phase, fmt.Sprintf("skipped: %d of %d preconditions failed", failed, total))
 		return
+	}
+	// Spec teardown always runs from this point on, even if setup or the command fail.
+	if len(spec.Teardown) > 0 {
+		defer l.runCommands(spec.Teardown, phase+" teardown", context, report, false)
+	}
+	// Spec setup: run before the command; stop (but not teardown) on first failure.
+	if len(spec.Setup) > 0 {
+		if !l.runCommands(spec.Setup, phase+" setup", context, report, true) {
+			return
+		}
 	}
 	command := spec.Command
 	wd, err := resolvePath(command.WorkingDir, context)

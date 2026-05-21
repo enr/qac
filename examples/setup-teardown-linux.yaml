@@ -1,0 +1,20 @@
+setup:
+  - cli: mkdir -p ../workdir/setup-teardown-test
+
+specs:
+  write-and-verify:
+    setup:
+      - cli: sh -c "echo test-data > ../workdir/setup-teardown-test/input.txt"
+    teardown:
+      - cli: rm -f ../workdir/setup-teardown-test/input.txt
+    command:
+      cli: cat ../workdir/setup-teardown-test/input.txt
+    expectations:
+      status:
+        equals_to: 0
+      output:
+        stdout:
+          equals_to: test-data
+
+teardown:
+  - cli: rm -rf ../workdir/setup-teardown-test

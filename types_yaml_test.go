@@ -362,3 +362,89 @@ specs:
 		})
 	}
 }
+
+func TestPlanSetupTeardownFieldsAccepted(t *testing.T) {
+	input := `
+setup:
+  - cli: mkdir -p ./workdir
+  - cli: echo ready
+teardown:
+  - cli: rm -rf ./workdir
+specs:
+  test:
+    command:
+      cli: mytool
+`
+	plan, err := unmarshalPlan(t, input)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(plan.Setup) != 2 {
+		t.Errorf("expected 2 setup commands, got %d", len(plan.Setup))
+	}
+	if plan.Setup[0].Cli != "mkdir -p ./workdir" {
+		t.Errorf("setup[0].cli = %q", plan.Setup[0].Cli)
+	}
+	if len(plan.Teardown) != 1 {
+		t.Errorf("expected 1 teardown command, got %d", len(plan.Teardown))
+	}
+}
+
+func TestSpecSetupTeardownFieldsAccepted(t *testing.T) {
+	input := `
+specs:
+  test:
+    setup:
+      - cli: echo seed > input.txt
+    teardown:
+      - cli: rm -f input.txt
+    command:
+      cli: mytool --input input.txt
+`
+	plan, err := unmarshalPlan(t, input)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	spec := plan.Specs["test"]
+	if len(spec.Setup) != 1 || spec.Setup[0].Cli != "echo seed > input.txt" {
+		t.Errorf("spec setup not parsed correctly: %+v", spec.Setup)
+	}
+	if len(spec.Teardown) != 1 || spec.Teardown[0].Cli != "rm -f input.txt" {
+		t.Errorf("spec teardown not parsed correctly: %+v", spec.Teardown)
+	}
+}
+
+func TestSetupTeardownTyposRejected(t *testing.T) {
+	typos := []struct {
+		name  string
+		field string
+		input string
+	}{
+		{
+			name:  "setupp at plan level",
+			field: "setupp",
+			input: "setupp:\n  - cli: x\nspecs:\n  t:\n    command:\n      cli: x\n",
+		},
+		{
+			name:  "teardonw at spec level",
+			field: "teardonw",
+			input: "specs:\n  t:\n    teardonw:\n      - cli: x\n    command:\n      cli: x\n",
+		},
+		{
+			name:  "unknown field inside setup command",
+			field: "clli",
+			input: "setup:\n  - clli: x\nspecs:\n  t:\n    command:\n      cli: x\n",
+		},
+	}
+	for _, tc := range typos {
+		t.Run(tc.name, func(t *testing.T) {
+			_, err := unmarshalPlan(t, tc.input)
+			if err == nil {
+				t.Fatalf("expected error for %q, got nil", tc.field)
+			}
+			if !strings.Contains(err.Error(), tc.field) {
+				t.Errorf("error should mention %q, got: %v", tc.field, err)
+			}
+		})
+	}
+}

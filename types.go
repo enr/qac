@@ -12,6 +12,8 @@ import (
 // TestPlan represents the full set of tests on a program.
 type TestPlan struct {
 	Vars          map[string]string `yaml:"vars"`
+	Setup         []Command         `yaml:"setup"`
+	Teardown      []Command         `yaml:"teardown"`
 	Preconditions Preconditions     `yaml:"preconditions"`
 	Specs         map[string]Spec   `yaml:"specs"`
 	specOrder     []string
@@ -23,7 +25,7 @@ func (tp *TestPlan) UnmarshalYAML(value *yaml.Node) error {
 	if value.Kind != yaml.MappingNode {
 		return fmt.Errorf("line %d: expected mapping for plan", value.Line)
 	}
-	known := map[string]bool{"preconditions": true, "specs": true, "vars": true}
+	known := map[string]bool{"preconditions": true, "specs": true, "vars": true, "setup": true, "teardown": true}
 	for i := 0; i < len(value.Content)-1; i += 2 {
 		k := value.Content[i].Value
 		if !known[k] {
@@ -36,6 +38,14 @@ func (tp *TestPlan) UnmarshalYAML(value *yaml.Node) error {
 		switch keyNode.Value {
 		case "vars":
 			if err := strictDecodeNode(valNode, &tp.Vars); err != nil {
+				return err
+			}
+		case "setup":
+			if err := strictDecodeNode(valNode, &tp.Setup); err != nil {
+				return err
+			}
+		case "teardown":
+			if err := strictDecodeNode(valNode, &tp.Teardown); err != nil {
 				return err
 			}
 		case "preconditions":
@@ -90,6 +100,8 @@ type Spec struct {
 	Description   string        `yaml:"description"`
 	Skip          bool          `yaml:"skip"`
 	SkipIf        SkipCondition `yaml:"skip_if"`
+	Setup         []Command     `yaml:"setup"`
+	Teardown      []Command     `yaml:"teardown"`
 	Preconditions Preconditions `yaml:"preconditions"`
 	Command       Command       `yaml:"command"`
 	Expectations  Expectations  `yaml:"expectations"`
