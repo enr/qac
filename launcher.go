@@ -35,22 +35,21 @@ type Launcher struct {
 	executor executor
 }
 
-// ExecuteFile run tests loaded from a file.
-func (l *Launcher) ExecuteFile(path string, opts ...RunOption) *TestExecutionReport {
+// ExecuteFile loads a test plan from path and runs it.
+// Returns a non-nil error when the file cannot be read or parsed; spec-level
+// failures are recorded in the report and do not cause an error return.
+func (l *Launcher) ExecuteFile(path string, opts ...RunOption) (*TestExecutionReport, error) {
 	cfg := applyOptions(opts)
-	report := &TestExecutionReport{}
 	absPath, err := filepath.Abs(path)
 	if err != nil {
-		report.addEntryAsError("load", asInfraError(fmt.Errorf("resolving path %q: %w", path, err)))
-		return report
+		return nil, fmt.Errorf("resolving path %q: %w", path, err)
 	}
 	plan, err := loadPlanFile(absPath, make(map[string]bool))
 	if err != nil {
-		report.addEntryAsError("load", asConfigError(fmt.Errorf("parsing test plan %q: %w", path, err)))
-		return report
+		return nil, fmt.Errorf("parsing test plan %q: %w", path, err)
 	}
 	context := planContext{basedir: filepath.Dir(absPath)}
-	return l.execute(plan, context, cfg)
+	return l.execute(plan, context, cfg), nil
 }
 
 // Execute run tests loaded from a TestPlan.

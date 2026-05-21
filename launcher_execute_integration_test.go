@@ -30,7 +30,11 @@ func TestLauncherExecution(t *testing.T) {
 	files := testFiles()
 	for _, testFile := range files {
 		launcher := NewLauncher()
-		report := launcher.ExecuteFile(testFile)
+		report, err := launcher.ExecuteFile(testFile)
+		if err != nil {
+			t.Errorf("ExecuteFile(%q): %v", testFile, err)
+			continue
+		}
 		errors := report.AllErrors()
 		if len(errors) > 0 {
 			t.Errorf(`File %s: expected 0 errors but got %d: %q`, testFile, len(errors), errors)

@@ -11,7 +11,10 @@ import (
 func run(t *testing.T, specFile string) {
 	t.Helper()
 	launcher := qac.NewLauncher()
-	report := launcher.ExecuteFile(specFile)
+	report, err := launcher.ExecuteFile(specFile)
+	if err != nil {
+		t.Fatalf("ExecuteFile(%q): %v", specFile, err)
+	}
 	reporter := qac.NewTestLogsReporter(t)
 	reporter.Publish(report)
 	for _, err := range report.AllErrors() {

@@ -380,7 +380,10 @@ specs:
         equals_to: 0
 `)
 	sut := NewLauncher()
-	res := sut.ExecuteFile(mainPath)
+	res, err := sut.ExecuteFile(mainPath)
+	if err != nil {
+		t.Fatalf("ExecuteFile: %v", err)
+	}
 	if errs := res.AllErrors(); len(errs) != 0 {
 		t.Errorf("expected 0 errors, got: %v", errs)
 	}
