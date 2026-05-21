@@ -3,6 +3,7 @@ package qac
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -119,6 +120,30 @@ func TestDirectoryAssertion_ContainsAny_NonePresent(t *testing.T) {
 		verify(planContext{basedir: base})
 	if r.Success() {
 		t.Error("expected failure when directory contains none of the required files")
+	}
+}
+
+func TestDirectoryAssertion_ContainsAny_ErrorShowsBothLists(t *testing.T) {
+	// The error message must include both what was expected (ContainsAny) and
+	// what is actually present, so the user can compare without manual inspection.
+	base := t.TempDir()
+	d := mkDir(t, base, "d")
+	writeFile(t, d, "present.txt", "")
+	r := (&DirectoryAssertion{Path: "d", Exists: boolPtr(true), ContainsAny: []string{"wanted.txt"}}).
+		verify(planContext{basedir: base})
+	if r.Success() {
+		t.Fatal("expected failure")
+	}
+	errs := r.Errors()
+	if len(errs) == 0 {
+		t.Fatal("expected at least one error")
+	}
+	msg := errs[0].Error()
+	if !strings.Contains(msg, "wanted.txt") {
+		t.Errorf("error should mention the expected file 'wanted.txt', got: %q", msg)
+	}
+	if !strings.Contains(msg, "present.txt") {
+		t.Errorf("error should mention the actual file 'present.txt' for debugging, got: %q", msg)
 	}
 }
 
