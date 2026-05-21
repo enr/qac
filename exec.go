@@ -122,7 +122,9 @@ func (e *runcmdExecutor) executeDirect(c Command, timeout time.Duration) executi
 	}
 }
 
-// buildExecCmd constructs an exec.Cmd with context, replicating runcmd's shell handling.
+// buildExecCmd constructs an exec.Cmd with context.
+// When c.Exe is set the process is started directly (no shell).
+// When only c.Cli is set it is executed via $SHELL -c (or cmd /C on Windows).
 func (e *runcmdExecutor) buildExecCmd(ctx context.Context, c Command) (string, *exec.Cmd, error) {
 	exe := c.Exe
 	args := c.Args

@@ -125,6 +125,14 @@ func (l *Launcher) execute(plan TestPlan, context planContext, cfg runConfig) *T
 func (l *Launcher) runCommands(commands []Command, phase string, ctx planContext, report *TestExecutionReport, stopOnFailure bool) bool {
 	allOk := true
 	for _, cmd := range commands {
+		if cmd.Cli != "" && cmd.Exe != "" {
+			report.addEntryAsError(phase, asConfigError(fmt.Errorf("cli and exe are mutually exclusive")))
+			allOk = false
+			if stopOnFailure {
+				return false
+			}
+			continue
+		}
 		if cmd.Stdin != "" && cmd.StdinFile != "" {
 			report.addEntryAsError(phase, asConfigError(fmt.Errorf("stdin and stdin_file are mutually exclusive")))
 			allOk = false
@@ -293,6 +301,10 @@ func (l *Launcher) executeSpec(context planContext, report *TestExecutionReport)
 		}
 	}
 	command := spec.Command
+	if command.Cli != "" && command.Exe != "" {
+		report.addEntryAsError(phase, asConfigError(fmt.Errorf("cli and exe are mutually exclusive")))
+		return
+	}
 	if command.Stdin != "" && command.StdinFile != "" {
 		report.addEntryAsError(phase, asConfigError(fmt.Errorf("stdin and stdin_file are mutually exclusive")))
 		return

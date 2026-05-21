@@ -188,16 +188,34 @@ type Preconditions struct {
 }
 
 // Command represents the command under test.
+//
+// Use either cli or exe+args — setting both is a configuration error.
+//
+//   - cli runs the value through the system shell ($SHELL -c on Unix, cmd /C on
+//     Windows). Shell features such as pipes (|), redirects (>), globs (*), and
+//     variable expansion are available. Convenient for simple one-liners.
+//     Avoid when any part of the command line comes from untrusted input:
+//     shell injection is possible.
+//
+//   - exe + args starts the process directly without a shell. Arguments are
+//     passed verbatim to the OS; no quoting, globbing, or expansion occurs.
+//     Prefer this form when shell features are not needed, especially with
+//     values that originate from user input or external data.
 type Command struct {
-	WorkingDir string            `yaml:"working_dir"`
-	Cli        string            `yaml:"cli"`
-	Exe        string            `yaml:"exe"`
-	Env        map[string]string `yaml:"env"`
-	// added to exe
+	WorkingDir string `yaml:"working_dir"`
+	// Cli is a shell command line. The system shell interprets it, so pipes,
+	// redirects, and globs work. Mutually exclusive with exe.
+	Cli string `yaml:"cli"`
+	// Exe is the path or name of the executable. The process is started
+	// directly without a shell. Mutually exclusive with cli.
+	Exe string `yaml:"exe"`
+	Env map[string]string `yaml:"env"`
+	// Extension is appended to Exe based on the runtime OS (e.g. ".exe" on Windows).
 	Extension FileExtension `yaml:"ext"`
-	Args      []string      `yaml:"args"`
-	// Maximum time to wait for the command; parsed by time.ParseDuration (e.g. "30s", "1m").
-	// Zero or empty means no timeout.
+	// Args holds arguments passed directly to Exe. Only meaningful when Exe is set.
+	Args []string `yaml:"args"`
+	// Timeout is the maximum wall-clock time to wait; parsed by time.ParseDuration
+	// (e.g. "30s", "1m"). Zero or empty means no timeout.
 	Timeout string `yaml:"timeout"`
 	// Stdin is an inline string piped to the command's standard input.
 	Stdin string `yaml:"stdin"`
