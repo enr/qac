@@ -73,6 +73,30 @@ func (a *OutputAssertion) verify(context planContext) AssertionResult {
 			}
 		}
 	}
+	if a.ContainsLine != "" {
+		found := false
+		for _, line := range outputLines(out) {
+			if line == a.ContainsLine {
+				found = true
+				break
+			}
+		}
+		if !found {
+			result.addErrorf("%s: no line equals:\n%s", a.id, a.ContainsLine)
+		}
+	}
+	if a.LineCount != nil {
+		got := len(outputLines(out))
+		if got != *a.LineCount {
+			result.addErrorf("%s: line count %d != expected %d", a.id, got, *a.LineCount)
+		}
+	}
+	if a.LineCountGte != nil {
+		got := len(outputLines(out))
+		if got < *a.LineCountGte {
+			result.addErrorf("%s: line count %d < required %d", a.id, got, *a.LineCountGte)
+		}
+	}
 	if a.Matches != "" {
 		re, err := regexp.Compile(a.Matches)
 		if err != nil {
@@ -102,4 +126,12 @@ func (a *OutputAssertion) failContainsAny(out string) bool {
 		}
 	}
 	return fail
+}
+
+// outputLines splits trimmed output into lines, returning nil for empty output.
+func outputLines(out string) []string {
+	if out == "" {
+		return nil
+	}
+	return strings.Split(out, "\n")
 }

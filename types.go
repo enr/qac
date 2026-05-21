@@ -218,6 +218,12 @@ type OutputAssertion struct {
 	ContainsAny  []string `yaml:"contains_any"`
 	ContainsAll  []string `yaml:"contains_all"`
 	ContainsNone []string `yaml:"contains_none"`
+	// ContainsLine requires at least one line to equal the given string exactly (after trimming).
+	ContainsLine string `yaml:"contains_line"`
+	// LineCount requires the output to have exactly N non-empty lines.
+	LineCount *int `yaml:"line_count"`
+	// LineCountGte requires the output to have at least N non-empty lines.
+	LineCountGte *int `yaml:"line_count_gte"`
 	// Matches requires the entire trimmed output to match the regular expression.
 	Matches string `yaml:"matches"`
 	// NotMatches requires the entire trimmed output NOT to match the regular expression.
