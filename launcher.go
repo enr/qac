@@ -144,6 +144,10 @@ func (l *Launcher) verifyPreconditions(preconditions Preconditions, context plan
 func (l *Launcher) executeSpec(context planContext, report *TestExecutionReport) {
 	spec := context.currentSpec
 	phase := specPhase(spec)
+	if reason := specSkipReason(spec); reason != "" {
+		report.addEntrySkipped(phase, reason)
+		return
+	}
 	preconditions := spec.Preconditions
 	proceed, failed, total := l.verifyPreconditions(preconditions, context, report)
 	if !proceed {

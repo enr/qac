@@ -76,10 +76,20 @@ func strictDecodeNode(node *yaml.Node, v interface{}) error {
 	return dec.Decode(v)
 }
 
+// SkipCondition holds the conditions under which a spec is skipped.
+type SkipCondition struct {
+	// EnvSet skips the spec when the named environment variable is defined (regardless of its value).
+	EnvSet string `yaml:"env_set"`
+	// EnvValue skips the spec when any named variable equals its specified value.
+	EnvValue map[string]string `yaml:"env_value"`
+}
+
 // Spec is the single test.
 type Spec struct {
 	id            string
 	Description   string        `yaml:"description"`
+	Skip          bool          `yaml:"skip"`
+	SkipIf        SkipCondition `yaml:"skip_if"`
 	Preconditions Preconditions `yaml:"preconditions"`
 	Command       Command       `yaml:"command"`
 	Expectations  Expectations  `yaml:"expectations"`

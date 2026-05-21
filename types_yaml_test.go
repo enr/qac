@@ -285,3 +285,80 @@ specs:
 		})
 	}
 }
+
+func TestSkipFieldsAccepted(t *testing.T) {
+	input := `
+specs:
+  always-skip:
+    skip: true
+    command:
+      cli: mytool
+  skip-in-ci:
+    skip_if:
+      env_set: CI
+    command:
+      cli: mytool
+  skip-on-windows:
+    skip_if:
+      env_value:
+        GOOS: windows
+    command:
+      cli: mytool
+`
+	plan, err := unmarshalPlan(t, input)
+	if err != nil {
+		t.Fatalf("unexpected error parsing skip fields: %v", err)
+	}
+	if !plan.Specs["always-skip"].Skip {
+		t.Error("expected skip=true for 'always-skip'")
+	}
+	if plan.Specs["skip-in-ci"].SkipIf.EnvSet != "CI" {
+		t.Errorf("env_set = %q, want %q", plan.Specs["skip-in-ci"].SkipIf.EnvSet, "CI")
+	}
+	if plan.Specs["skip-on-windows"].SkipIf.EnvValue["GOOS"] != "windows" {
+		t.Errorf("env_value[GOOS] = %q, want %q", plan.Specs["skip-on-windows"].SkipIf.EnvValue["GOOS"], "windows")
+	}
+}
+
+func TestSkipTypoRejected(t *testing.T) {
+	cases := []struct {
+		name  string
+		field string
+		input string
+	}{
+		{
+			name:  "skipp typo",
+			field: "skipp",
+			input: `
+specs:
+  test:
+    skipp: true
+    command:
+      cli: mytool
+`,
+		},
+		{
+			name:  "env_sett typo",
+			field: "env_sett",
+			input: `
+specs:
+  test:
+    skip_if:
+      env_sett: CI
+    command:
+      cli: mytool
+`,
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			_, err := unmarshalPlan(t, tc.input)
+			if err == nil {
+				t.Fatalf("expected error for unknown field %q, got nil", tc.field)
+			}
+			if !strings.Contains(err.Error(), tc.field) {
+				t.Errorf("error should mention %q, got: %v", tc.field, err)
+			}
+		})
+	}
+}
