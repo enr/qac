@@ -106,6 +106,10 @@ type Spec struct {
 	Tags          []string      `yaml:"tags"`
 	Skip          bool          `yaml:"skip"`
 	SkipIf        SkipCondition `yaml:"skip_if"`
+	// Retries is the number of additional attempts after the first failure.
+	// Zero (default) means no retry.
+	Retries    int    `yaml:"retries"`
+	RetryDelay string `yaml:"retry_delay"`
 	Setup         []Command     `yaml:"setup"`
 	Teardown      []Command     `yaml:"teardown"`
 	Preconditions Preconditions `yaml:"preconditions"`

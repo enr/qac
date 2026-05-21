@@ -107,7 +107,7 @@ func (l *Launcher) execute(plan TestPlan, context planContext, cfg runConfig) *T
 			skipped = true
 		} else {
 			context.currentSpec = spec
-			l.executeSpec(context, report)
+			l.executeSpecWithRetries(context, report)
 		}
 		report.closeBlock(phase, time.Since(start))
 		if cfg.failFast && !skipped {
@@ -190,6 +190,59 @@ func specPhase(spec Spec) string {
 		return spec.ID() + " : " + spec.Description
 	}
 	return spec.ID()
+}
+
+// executeSpecWithRetries runs executeSpec up to spec.Retries+1 times.
+// Each attempt is isolated in a temporary report; only the decisive attempt's
+// entries (success, or last failure) are merged into the main report.
+// Between attempts an info entry is added and retry_delay is observed.
+// Spec teardown runs on every attempt (clean state for next retry) but only
+// the final attempt's teardown entries appear in the main report.
+func (l *Launcher) executeSpecWithRetries(ctx planContext, report *TestExecutionReport) {
+	spec := ctx.currentSpec
+	phase := specPhase(spec)
+	maxAttempts := 1
+	if spec.Retries > 0 {
+		maxAttempts = spec.Retries + 1
+	}
+
+	var retryDelay time.Duration
+	if spec.RetryDelay != "" {
+		d, err := time.ParseDuration(spec.RetryDelay)
+		if err != nil {
+			report.addEntryAsError(phase, asConfigError(fmt.Errorf("invalid retry_delay %q: %w", spec.RetryDelay, err)))
+		} else {
+			retryDelay = d
+		}
+	}
+
+	for attempt := 1; attempt <= maxAttempts; attempt++ {
+		tmp := &TestExecutionReport{}
+		l.executeSpec(ctx, tmp)
+
+		var failed bool
+		if b, ok := tmp.blockIndex[phase]; ok {
+			failed = b.Failed()
+		}
+		isLast := attempt == maxAttempts
+
+		if !failed || isLast {
+			for _, b := range tmp.Blocks() {
+				for _, e := range b.entries {
+					report.addEntry(b.phase, e)
+				}
+			}
+			if attempt > 1 && !failed {
+				report.addEntryInfo(phase, fmt.Sprintf("passed on attempt %d of %d", attempt, maxAttempts))
+			}
+			return
+		}
+
+		report.addEntryInfo(phase, fmt.Sprintf("attempt %d of %d failed, retrying...", attempt, maxAttempts))
+		if retryDelay > 0 {
+			time.Sleep(retryDelay)
+		}
+	}
 }
 
 func (l *Launcher) verifyPreconditions(preconditions Preconditions, context planContext, report *TestExecutionReport) (bool, int, int) {
