@@ -7,5 +7,6 @@ func testFiles() []string {
 	return []string{
 		`examples/test-ok-linux.yaml`,
 		`examples/linux.yaml`,
+		`examples/vars-linux.yaml`,
 	}
 }

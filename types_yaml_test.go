@@ -165,3 +165,43 @@ specs:
 		t.Errorf("error message should mention the unknown field 'timeot', got: %v", err)
 	}
 }
+
+func TestVarsSectionParsed(t *testing.T) {
+	input := `
+vars:
+  base: /tmp/workdir
+  tool: ./bin/mytool
+specs:
+  test:
+    command:
+      cli: mytool
+`
+	plan, err := unmarshalPlan(t, input)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if plan.Vars["base"] != "/tmp/workdir" {
+		t.Errorf("vars[base] = %q, want %q", plan.Vars["base"], "/tmp/workdir")
+	}
+	if plan.Vars["tool"] != "./bin/mytool" {
+		t.Errorf("vars[tool] = %q, want %q", plan.Vars["tool"], "./bin/mytool")
+	}
+}
+
+func TestVarsTypoRejected(t *testing.T) {
+	input := `
+varz:
+  base: /tmp/workdir
+specs:
+  test:
+    command:
+      cli: mytool
+`
+	_, err := unmarshalPlan(t, input)
+	if err == nil {
+		t.Fatal("expected error for unknown field 'varz' at plan level, got nil")
+	}
+	if !strings.Contains(err.Error(), "varz") {
+		t.Errorf("error message should mention 'varz', got: %v", err)
+	}
+}

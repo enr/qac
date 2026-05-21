@@ -44,6 +44,13 @@ func (l *Launcher) ExecuteFile(path string) *TestExecutionReport {
 		report.addEntryAsError("load", asConfigError(fmt.Errorf("reading test plan %q: %w", path, err)))
 		return report
 	}
+	// Pre-parse to extract vars, then interpolate before the full strict parse.
+	var planVars struct {
+		Vars map[string]string `yaml:"vars"`
+	}
+	_ = yaml.Unmarshal(dat, &planVars)
+	dat = interpolate(dat, planVars.Vars)
+
 	plan := TestPlan{}
 	dec := yaml.NewDecoder(bytes.NewReader(dat))
 	dec.KnownFields(true)

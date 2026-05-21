@@ -1,0 +1,24 @@
+vars:
+  wd: ../workdir/vars-test
+  msg: hello-from-vars
+
+specs:
+  mkdir_via_var:
+    command:
+      cli: mkdir -p ${wd}
+    expectations:
+      status:
+        equals_to: 0
+      fs:
+        - directory: ${wd}
+          exists: true
+
+  echo_via_var:
+    command:
+      cli: echo ${msg}
+    expectations:
+      status:
+        equals_to: 0
+      output:
+        stdout:
+          equals_to: ${msg}

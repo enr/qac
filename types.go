@@ -11,8 +11,9 @@ import (
 
 // TestPlan represents the full set of tests on a program.
 type TestPlan struct {
-	Preconditions Preconditions   `yaml:"preconditions"`
-	Specs         map[string]Spec `yaml:"specs"`
+	Vars          map[string]string `yaml:"vars"`
+	Preconditions Preconditions     `yaml:"preconditions"`
+	Specs         map[string]Spec   `yaml:"specs"`
 	specOrder     []string
 }
 
@@ -22,7 +23,7 @@ func (tp *TestPlan) UnmarshalYAML(value *yaml.Node) error {
 	if value.Kind != yaml.MappingNode {
 		return fmt.Errorf("line %d: expected mapping for plan", value.Line)
 	}
-	known := map[string]bool{"preconditions": true, "specs": true}
+	known := map[string]bool{"preconditions": true, "specs": true, "vars": true}
 	for i := 0; i < len(value.Content)-1; i += 2 {
 		k := value.Content[i].Value
 		if !known[k] {
@@ -33,6 +34,10 @@ func (tp *TestPlan) UnmarshalYAML(value *yaml.Node) error {
 		keyNode := value.Content[i]
 		valNode := value.Content[i+1]
 		switch keyNode.Value {
+		case "vars":
+			if err := strictDecodeNode(valNode, &tp.Vars); err != nil {
+				return err
+			}
 		case "preconditions":
 			if err := strictDecodeNode(valNode, &tp.Preconditions); err != nil {
 				return err
