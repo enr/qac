@@ -169,3 +169,24 @@ func TestSkippedSpecBlockStatus(t *testing.T) {
 	}
 	t.Error("block 'needs-file' not found in report")
 }
+
+// --- ReportEntryType.String ---
+
+func TestReportEntryType_String(t *testing.T) {
+	cases := []struct {
+		kind ReportEntryType
+		want string
+	}{
+		{ErrorType, "ERROR"},
+		{InfoType, "INFO"},
+		{SuccessType, "OK"},
+		{SkippedType, "SKIP"},
+		{TimedOutType, "TIMEOUT"},
+		{reportTypeNone, "UNKNOWN"},
+	}
+	for _, tc := range cases {
+		if got := tc.kind.String(); got != tc.want {
+			t.Errorf("%T(%d).String() = %q, want %q", tc.kind, tc.kind, got, tc.want)
+		}
+	}
+}

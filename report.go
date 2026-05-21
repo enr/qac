@@ -48,17 +48,17 @@ func (r *ReportEntry) Errors() []error {
 func (t ReportEntryType) String() string {
 	switch t {
 	case ErrorType:
-		return "error"
+		return "ERROR"
 	case InfoType:
-		return "info"
+		return "INFO"
 	case SuccessType:
-		return "success"
+		return "OK"
 	case SkippedType:
-		return "skipped"
+		return "SKIP"
 	case TimedOutType:
-		return "timedout"
+		return "TIMEOUT"
 	default:
-		return "none"
+		return "UNKNOWN"
 	}
 }
 
