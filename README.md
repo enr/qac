@@ -355,6 +355,74 @@ if failed := report.FailedSpecs(); len(failed) > 0 {
 report.FailWith(t)
 ```
 
+## Reporters
+
+A `Reporter` publishes a `*TestExecutionReport` for human consumption. The
+interface has a single method:
+
+```go
+type Reporter interface {
+  Publish(report *TestExecutionReport) error
+}
+```
+
+Two built-in implementations are provided.
+
+### NewTestLogsReporter(t)
+
+Writes to Go's test log via `t.Logf`. Each spec block is printed as a labelled
+line with its duration and status (`OK` / `KO` / `SKIP`); errors and skipped
+reasons appear as indented sub-lines. Output is only shown by `go test` when
+the test fails or `-v` is used.
+
+```go
+func TestCLI(t *testing.T) {
+  report, err := qac.NewLauncher().ExecuteFile("plan.yaml")
+  if err != nil {
+    t.Fatal(err)
+  }
+  reporter := qac.NewTestLogsReporter(t)
+  reporter.Publish(report)
+  report.FailWith(t)
+}
+```
+
+Example output (with `-v` or on failure):
+
+```
+[1/3] cat                                    (2ms) OK
+[2/3] mkdir                                  (1ms) OK
+[3/3] rm                                     (0ms) KO
+  | KO status: expected 0, got 1
+```
+
+### NewConsoleReporter()
+
+Writes the same format to stdout via `fmt.Printf`. Use it in standalone
+programs or scripts that run qac outside of `go test`.
+
+```go
+report := qac.NewLauncher().Execute(plan)
+qac.NewConsoleReporter().Publish(report)
+```
+
+### Custom reporter
+
+Implement the `Reporter` interface to produce any output format you need
+(JSON, JUnit XML, structured logs, etc.):
+
+```go
+type jsonReporter struct{}
+
+func (r *jsonReporter) Publish(report *qac.TestExecutionReport) error {
+  return json.NewEncoder(os.Stdout).Encode(map[string]interface{}{
+    "summary":      report.Summary(),
+    "failed_specs": report.FailedSpecs(),
+    "success":      report.Success(),
+  })
+}
+```
+
 ## Run options reference
 
 | Option | Description |
