@@ -244,6 +244,60 @@ func (r *TestExecutionReport) AllErrors() []error {
 	return errors
 }
 
+// Success returns true when no block recorded an error or timeout.
+func (r *TestExecutionReport) Success() bool {
+	return len(r.AllErrors()) == 0
+}
+
+// FailedSpecs returns the phase names of spec blocks that failed.
+func (r *TestExecutionReport) FailedSpecs() []string {
+	var names []string
+	for _, b := range r.blocks {
+		if b.Index() > 0 && b.Failed() {
+			names = append(names, b.Phase())
+		}
+	}
+	return names
+}
+
+// Summary returns a one-line human-readable description of the execution
+// result, e.g. "3/5 specs passed" or "5/5 specs passed (2 skipped)".
+func (r *TestExecutionReport) Summary() string {
+	total, passed, skipped := 0, 0, 0
+	for _, b := range r.blocks {
+		if b.Index() == 0 {
+			continue
+		}
+		total++
+		if b.Skipped() {
+			skipped++
+		} else if !b.Failed() {
+			passed++
+		}
+	}
+	s := fmt.Sprintf("%d/%d specs passed", passed, total)
+	if skipped > 0 {
+		s += fmt.Sprintf(" (%d skipped)", skipped)
+	}
+	return s
+}
+
+// FailWith calls t.Errorf for every error in the report, prefixed with the
+// block phase so failures are easy to locate. It is the idiomatic one-liner
+// to fail a Go test when a qac plan has errors:
+//
+//	report.FailWith(t)
+func (r *TestExecutionReport) FailWith(t *testing.T) {
+	t.Helper()
+	for _, block := range r.blocks {
+		for _, entry := range block.Entries() {
+			for _, err := range entry.Errors() {
+				t.Errorf("[%s] %v", block.Phase(), err)
+			}
+		}
+	}
+}
+
 // Reporter is the interface for components publishing the report.
 type Reporter interface {
 	Publish(report *TestExecutionReport) error
