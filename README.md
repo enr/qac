@@ -299,6 +299,62 @@ specs:
         equals_to: 0
 ```
 
+## Working with the report
+
+`Execute` and `ExecuteFile` return a `*TestExecutionReport`. Three convenience
+methods cover the most common test-integration patterns.
+
+### Summary()
+
+Returns a one-line human-readable result string — useful as a test log header:
+
+```go
+report, _ := launcher.ExecuteFile("plan.yaml")
+t.Log(report.Summary()) // "3/5 specs passed (1 skipped)"
+```
+
+### FailedSpecs()
+
+Returns the names of the specs that failed, in execution order. Use it to log
+or assert on specific failures:
+
+```go
+if failed := report.FailedSpecs(); len(failed) > 0 {
+  t.Errorf("failing specs: %v", failed)
+}
+```
+
+### FailWith(t)
+
+Calls `t.Errorf` for every error in the report, prefixed with the spec phase so
+failures are easy to locate in test output. It is the manual-report equivalent
+of `ExecuteFileT`:
+
+```go
+report, err := launcher.ExecuteFile("plan.yaml")
+if err != nil {
+  t.Fatal(err)
+}
+t.Log(report.Summary())
+report.FailWith(t)
+```
+
+Combining all three with a reporter for full visibility:
+
+```go
+report, err := launcher.ExecuteFile("plan.yaml", qac.WithTags("fast"))
+if err != nil {
+  t.Fatal(err)
+}
+reporter := qac.NewTestLogsReporter(t)
+reporter.Publish(report)
+t.Log(report.Summary())
+if failed := report.FailedSpecs(); len(failed) > 0 {
+  t.Logf("failed specs: %v", failed)
+}
+report.FailWith(t)
+```
+
 ## Run options reference
 
 | Option | Description |
