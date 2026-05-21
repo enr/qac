@@ -42,6 +42,22 @@ func (r *ReportEntry) Errors() []error {
 	return r.errors
 }
 
+// String returns a human-readable name for the entry type.
+func (t ReportEntryType) String() string {
+	switch t {
+	case ErrorType:
+		return "error"
+	case InfoType:
+		return "info"
+	case SuccessType:
+		return "success"
+	case SkippedType:
+		return "skipped"
+	default:
+		return "none"
+	}
+}
+
 // Kind returns the type of a report entry: error, info, success, skipped...
 func (r *ReportEntry) Kind() ReportEntryType {
 	return r.kind
