@@ -19,7 +19,7 @@ func (a *DirectoryAssertion) verify(context planContext) AssertionResult {
 		return result
 	}
 	fileExists := files.Exists(actualPath)
-	shouldExist := a.Exists
+	shouldExist := a.Exists == nil || *a.Exists
 	if shouldExist != fileExists {
 		result.addErrorf(`directory %s exist expected %t but got %t`, actualPath, shouldExist, fileExists)
 		return result

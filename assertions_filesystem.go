@@ -16,7 +16,7 @@ func (a *FileSystemAssertion) actualAssertion(context planContext) (assertion, e
 		return &FileAssertion{
 			Path:             a.File,
 			Extension:        a.Extension,
-			Exists:           shouldExists,
+			Exists:           &shouldExists,
 			ContainsAll:      a.ContainsAll,
 			ContainsAny:      a.ContainsAny,
 			EqualsTo:         a.EqualsTo,
@@ -32,7 +32,7 @@ func (a *FileSystemAssertion) actualAssertion(context planContext) (assertion, e
 	}
 	return &DirectoryAssertion{
 		Path:            a.Directory,
-		Exists:          shouldExists,
+		Exists:          &shouldExists,
 		ContainsAll:     a.ContainsAll,
 		ContainsAny:     a.ContainsAny,
 		EqualsTo:        a.EqualsTo,

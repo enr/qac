@@ -127,7 +127,9 @@ type FileSystemAssertion struct {
 	File      string        `yaml:"file"`
 	Extension FileExtension `yaml:"ext"`
 	Directory string        `yaml:"directory"`
-	Exists    *bool         `yaml:"exists"`
+	// Exists defaults to true when omitted (nil): the assertion checks the path exists.
+	// Set explicitly to false to assert the path must not exist.
+	Exists *bool `yaml:"exists"`
 	EqualsTo  string        `yaml:"equals_to"`
 	// Only for files
 	TextEqualsTo     string   `yaml:"text_equals_to"`
@@ -158,7 +160,9 @@ func (e FileExtension) get() string {
 type FileAssertion struct {
 	Path             string        `yaml:"path"`
 	Extension        FileExtension `yaml:"ext"`
-	Exists           bool          `yaml:"exists"`
+	// Exists defaults to true (nil): check that the file exists.
+	// Set to false to assert the file must not exist.
+	Exists           *bool         `yaml:"exists"`
 	EqualsTo         string        `yaml:"equals_to"`
 	TextEqualsTo     string        `yaml:"text_equals_to"`
 	ContainsAny      []string      `yaml:"contains_any"`
@@ -169,7 +173,9 @@ type FileAssertion struct {
 // DirectoryAssertion is an assertion on a given directory.
 type DirectoryAssertion struct {
 	Path            string   `yaml:"path"`
-	Exists          bool     `yaml:"exists"`
+	// Exists defaults to true (nil): check that the directory exists.
+	// Set to false to assert the directory must not exist.
+	Exists          *bool    `yaml:"exists"`
 	EqualsTo        string   `yaml:"equals_to"`
 	ContainsAny     []string `yaml:"contains_any"`
 	ContainsAll     []string `yaml:"contains_all"`

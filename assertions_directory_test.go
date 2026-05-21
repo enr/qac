@@ -20,7 +20,7 @@ func mkDir(t *testing.T, parent, name string) string {
 func TestDirectoryAssertion_ExistsTrue_DirPresent(t *testing.T) {
 	base := t.TempDir()
 	mkDir(t, base, "mydir")
-	r := (&DirectoryAssertion{Path: "mydir", Exists: true}).verify(planContext{basedir: base})
+	r := (&DirectoryAssertion{Path: "mydir", Exists: boolPtr(true)}).verify(planContext{basedir: base})
 	if !r.Success() {
 		t.Errorf("expected success for existing dir with Exists=true, got: %v", r.Errors())
 	}
@@ -28,7 +28,7 @@ func TestDirectoryAssertion_ExistsTrue_DirPresent(t *testing.T) {
 
 func TestDirectoryAssertion_ExistsTrue_DirMissing(t *testing.T) {
 	base := t.TempDir()
-	r := (&DirectoryAssertion{Path: "absent", Exists: true}).verify(planContext{basedir: base})
+	r := (&DirectoryAssertion{Path: "absent", Exists: boolPtr(true)}).verify(planContext{basedir: base})
 	if r.Success() {
 		t.Error("expected failure when directory does not exist but Exists=true")
 	}
@@ -36,7 +36,7 @@ func TestDirectoryAssertion_ExistsTrue_DirMissing(t *testing.T) {
 
 func TestDirectoryAssertion_ExistsFalse_DirMissing(t *testing.T) {
 	base := t.TempDir()
-	r := (&DirectoryAssertion{Path: "absent", Exists: false}).verify(planContext{basedir: base})
+	r := (&DirectoryAssertion{Path: "absent", Exists: boolPtr(false)}).verify(planContext{basedir: base})
 	if !r.Success() {
 		t.Errorf("expected success when directory absent and Exists=false, got: %v", r.Errors())
 	}
@@ -45,7 +45,7 @@ func TestDirectoryAssertion_ExistsFalse_DirMissing(t *testing.T) {
 func TestDirectoryAssertion_ExistsFalse_DirPresent(t *testing.T) {
 	base := t.TempDir()
 	mkDir(t, base, "present")
-	r := (&DirectoryAssertion{Path: "present", Exists: false}).verify(planContext{basedir: base})
+	r := (&DirectoryAssertion{Path: "present", Exists: boolPtr(false)}).verify(planContext{basedir: base})
 	if r.Success() {
 		t.Error("expected failure when directory exists but Exists=false")
 	}
@@ -56,7 +56,7 @@ func TestDirectoryAssertion_ExistsFalse_NoFurtherChecks(t *testing.T) {
 	base := t.TempDir()
 	r := (&DirectoryAssertion{
 		Path:        "absent",
-		Exists:      false,
+		Exists:      boolPtr(false),
 		ContainsAll: []string{"should-not-be-checked"},
 	}).verify(planContext{basedir: base})
 	if !r.Success() {
@@ -67,7 +67,7 @@ func TestDirectoryAssertion_ExistsFalse_NoFurtherChecks(t *testing.T) {
 func TestDirectoryAssertion_PathIsFile(t *testing.T) {
 	base := t.TempDir()
 	writeFile(t, base, "notadir.txt", "content")
-	r := (&DirectoryAssertion{Path: "notadir.txt", Exists: true}).verify(planContext{basedir: base})
+	r := (&DirectoryAssertion{Path: "notadir.txt", Exists: boolPtr(true)}).verify(planContext{basedir: base})
 	if r.Success() {
 		t.Error("expected failure when path points to a file, not a directory")
 	}
@@ -80,7 +80,7 @@ func TestDirectoryAssertion_ContainsAll_AllPresent(t *testing.T) {
 	d := mkDir(t, base, "d")
 	writeFile(t, d, "a.txt", "")
 	writeFile(t, d, "b.txt", "")
-	r := (&DirectoryAssertion{Path: "d", Exists: true, ContainsAll: []string{"a.txt", "b.txt"}}).
+	r := (&DirectoryAssertion{Path: "d", Exists: boolPtr(true), ContainsAll: []string{"a.txt", "b.txt"}}).
 		verify(planContext{basedir: base})
 	if !r.Success() {
 		t.Errorf("expected success for contains_all, got: %v", r.Errors())
@@ -91,7 +91,7 @@ func TestDirectoryAssertion_ContainsAll_OneMissing(t *testing.T) {
 	base := t.TempDir()
 	d := mkDir(t, base, "d")
 	writeFile(t, d, "a.txt", "")
-	r := (&DirectoryAssertion{Path: "d", Exists: true, ContainsAll: []string{"a.txt", "missing.txt"}}).
+	r := (&DirectoryAssertion{Path: "d", Exists: boolPtr(true), ContainsAll: []string{"a.txt", "missing.txt"}}).
 		verify(planContext{basedir: base})
 	if r.Success() {
 		t.Error("expected failure when directory is missing a required file")
@@ -104,7 +104,7 @@ func TestDirectoryAssertion_ContainsAny_OnePresent(t *testing.T) {
 	base := t.TempDir()
 	d := mkDir(t, base, "d")
 	writeFile(t, d, "a.txt", "")
-	r := (&DirectoryAssertion{Path: "d", Exists: true, ContainsAny: []string{"missing.txt", "a.txt"}}).
+	r := (&DirectoryAssertion{Path: "d", Exists: boolPtr(true), ContainsAny: []string{"missing.txt", "a.txt"}}).
 		verify(planContext{basedir: base})
 	if !r.Success() {
 		t.Errorf("expected success for contains_any, got: %v", r.Errors())
@@ -115,7 +115,7 @@ func TestDirectoryAssertion_ContainsAny_NonePresent(t *testing.T) {
 	base := t.TempDir()
 	d := mkDir(t, base, "d")
 	writeFile(t, d, "a.txt", "")
-	r := (&DirectoryAssertion{Path: "d", Exists: true, ContainsAny: []string{"x.txt", "y.txt"}}).
+	r := (&DirectoryAssertion{Path: "d", Exists: boolPtr(true), ContainsAny: []string{"x.txt", "y.txt"}}).
 		verify(planContext{basedir: base})
 	if r.Success() {
 		t.Error("expected failure when directory contains none of the required files")
@@ -128,7 +128,7 @@ func TestDirectoryAssertion_ContainsExactly_Match(t *testing.T) {
 	base := t.TempDir()
 	d := mkDir(t, base, "d")
 	writeFile(t, d, "a.txt", "")
-	r := (&DirectoryAssertion{Path: "d", Exists: true, ContainsExactly: []string{"a.txt"}}).
+	r := (&DirectoryAssertion{Path: "d", Exists: boolPtr(true), ContainsExactly: []string{"a.txt"}}).
 		verify(planContext{basedir: base})
 	if !r.Success() {
 		t.Errorf("expected success for exact directory contents match, got: %v", r.Errors())
@@ -140,7 +140,7 @@ func TestDirectoryAssertion_ContainsExactly_ExtraFile(t *testing.T) {
 	d := mkDir(t, base, "d")
 	writeFile(t, d, "a.txt", "")
 	writeFile(t, d, "b.txt", "")
-	r := (&DirectoryAssertion{Path: "d", Exists: true, ContainsExactly: []string{"a.txt"}}).
+	r := (&DirectoryAssertion{Path: "d", Exists: boolPtr(true), ContainsExactly: []string{"a.txt"}}).
 		verify(planContext{basedir: base})
 	if r.Success() {
 		t.Error("expected failure when directory has more files than expected")
@@ -151,7 +151,7 @@ func TestDirectoryAssertion_ContainsExactly_MissingFile(t *testing.T) {
 	base := t.TempDir()
 	d := mkDir(t, base, "d")
 	writeFile(t, d, "a.txt", "")
-	r := (&DirectoryAssertion{Path: "d", Exists: true, ContainsExactly: []string{"a.txt", "b.txt"}}).
+	r := (&DirectoryAssertion{Path: "d", Exists: boolPtr(true), ContainsExactly: []string{"a.txt", "b.txt"}}).
 		verify(planContext{basedir: base})
 	if r.Success() {
 		t.Error("expected failure when directory is missing a file listed in contains_exactly")

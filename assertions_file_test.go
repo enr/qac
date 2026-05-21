@@ -20,7 +20,7 @@ func writeFile(t *testing.T, dir, name, content string) string {
 func TestFileAssertion_ExistsTrue_FilePresent(t *testing.T) {
 	dir := t.TempDir()
 	writeFile(t, dir, "f.txt", "hello")
-	r := (&FileAssertion{Path: "f.txt", Exists: true}).verify(planContext{basedir: dir})
+	r := (&FileAssertion{Path: "f.txt", Exists: boolPtr(true)}).verify(planContext{basedir: dir})
 	if !r.Success() {
 		t.Errorf("expected success for existing file with Exists=true, got: %v", r.Errors())
 	}
@@ -28,7 +28,7 @@ func TestFileAssertion_ExistsTrue_FilePresent(t *testing.T) {
 
 func TestFileAssertion_ExistsTrue_FileMissing(t *testing.T) {
 	dir := t.TempDir()
-	r := (&FileAssertion{Path: "missing.txt", Exists: true}).verify(planContext{basedir: dir})
+	r := (&FileAssertion{Path: "missing.txt", Exists: boolPtr(true)}).verify(planContext{basedir: dir})
 	if r.Success() {
 		t.Error("expected failure when file is absent but Exists=true")
 	}
@@ -36,7 +36,7 @@ func TestFileAssertion_ExistsTrue_FileMissing(t *testing.T) {
 
 func TestFileAssertion_ExistsFalse_FileMissing(t *testing.T) {
 	dir := t.TempDir()
-	r := (&FileAssertion{Path: "missing.txt", Exists: false}).verify(planContext{basedir: dir})
+	r := (&FileAssertion{Path: "missing.txt", Exists: boolPtr(false)}).verify(planContext{basedir: dir})
 	if !r.Success() {
 		t.Errorf("expected success when file is absent and Exists=false, got: %v", r.Errors())
 	}
@@ -45,7 +45,7 @@ func TestFileAssertion_ExistsFalse_FileMissing(t *testing.T) {
 func TestFileAssertion_ExistsFalse_FilePresent(t *testing.T) {
 	dir := t.TempDir()
 	writeFile(t, dir, "present.txt", "content")
-	r := (&FileAssertion{Path: "present.txt", Exists: false}).verify(planContext{basedir: dir})
+	r := (&FileAssertion{Path: "present.txt", Exists: boolPtr(false)}).verify(planContext{basedir: dir})
 	if r.Success() {
 		t.Error("expected failure when file is present but Exists=false")
 	}
@@ -57,7 +57,7 @@ func TestFileAssertion_ExistsFalse_NoFurtherChecks(t *testing.T) {
 	dir := t.TempDir()
 	r := (&FileAssertion{
 		Path:        "missing.txt",
-		Exists:      false,
+		Exists:      boolPtr(false),
 		ContainsAll: []string{"unreachable"},
 	}).verify(planContext{basedir: dir})
 	if !r.Success() {
@@ -70,7 +70,7 @@ func TestFileAssertion_ExistsFalse_NoFurtherChecks(t *testing.T) {
 func TestFileAssertion_ContainsAll_AllPresent(t *testing.T) {
 	dir := t.TempDir()
 	writeFile(t, dir, "f.txt", "foo bar baz")
-	r := (&FileAssertion{Path: "f.txt", Exists: true, ContainsAll: []string{"foo", "baz"}}).
+	r := (&FileAssertion{Path: "f.txt", Exists: boolPtr(true), ContainsAll: []string{"foo", "baz"}}).
 		verify(planContext{basedir: dir})
 	if !r.Success() {
 		t.Errorf("expected success when all strings are in the file, got: %v", r.Errors())
@@ -80,7 +80,7 @@ func TestFileAssertion_ContainsAll_AllPresent(t *testing.T) {
 func TestFileAssertion_ContainsAll_OneMissing(t *testing.T) {
 	dir := t.TempDir()
 	writeFile(t, dir, "f.txt", "foo bar")
-	r := (&FileAssertion{Path: "f.txt", Exists: true, ContainsAll: []string{"foo", "missing"}}).
+	r := (&FileAssertion{Path: "f.txt", Exists: boolPtr(true), ContainsAll: []string{"foo", "missing"}}).
 		verify(planContext{basedir: dir})
 	if r.Success() {
 		t.Error("expected failure when file does not contain all required strings")
@@ -92,7 +92,7 @@ func TestFileAssertion_ContainsAll_OneMissing(t *testing.T) {
 func TestFileAssertion_ContainsAny_OnePresent(t *testing.T) {
 	dir := t.TempDir()
 	writeFile(t, dir, "f.txt", "foo bar")
-	r := (&FileAssertion{Path: "f.txt", Exists: true, ContainsAny: []string{"missing", "foo"}}).
+	r := (&FileAssertion{Path: "f.txt", Exists: boolPtr(true), ContainsAny: []string{"missing", "foo"}}).
 		verify(planContext{basedir: dir})
 	if !r.Success() {
 		t.Errorf("expected success when at least one string is in the file, got: %v", r.Errors())
@@ -102,7 +102,7 @@ func TestFileAssertion_ContainsAny_OnePresent(t *testing.T) {
 func TestFileAssertion_ContainsAny_NonePresent(t *testing.T) {
 	dir := t.TempDir()
 	writeFile(t, dir, "f.txt", "foo bar")
-	r := (&FileAssertion{Path: "f.txt", Exists: true, ContainsAny: []string{"missing", "nope"}}).
+	r := (&FileAssertion{Path: "f.txt", Exists: boolPtr(true), ContainsAny: []string{"missing", "nope"}}).
 		verify(planContext{basedir: dir})
 	if r.Success() {
 		t.Error("expected failure when file contains none of the required strings")
@@ -115,7 +115,7 @@ func TestFileAssertion_TextEqualsTo_Pass(t *testing.T) {
 	dir := t.TempDir()
 	writeFile(t, dir, "actual.txt", "line1\nline2\n")
 	writeFile(t, dir, "expected.txt", "line1\nline2\n")
-	r := (&FileAssertion{Path: "actual.txt", Exists: true, TextEqualsTo: "expected.txt"}).
+	r := (&FileAssertion{Path: "actual.txt", Exists: boolPtr(true), TextEqualsTo: "expected.txt"}).
 		verify(planContext{basedir: dir})
 	if !r.Success() {
 		t.Errorf("expected success for identical text files, got: %v", r.Errors())
@@ -126,7 +126,7 @@ func TestFileAssertion_TextEqualsTo_ContentDiffers(t *testing.T) {
 	dir := t.TempDir()
 	writeFile(t, dir, "actual.txt", "line1\n")
 	writeFile(t, dir, "expected.txt", "different\n")
-	r := (&FileAssertion{Path: "actual.txt", Exists: true, TextEqualsTo: "expected.txt"}).
+	r := (&FileAssertion{Path: "actual.txt", Exists: boolPtr(true), TextEqualsTo: "expected.txt"}).
 		verify(planContext{basedir: dir})
 	if r.Success() {
 		t.Error("expected failure when file content differs from expected")
@@ -136,7 +136,7 @@ func TestFileAssertion_TextEqualsTo_ContentDiffers(t *testing.T) {
 func TestFileAssertion_TextEqualsTo_ExpectedFileMissing(t *testing.T) {
 	dir := t.TempDir()
 	writeFile(t, dir, "actual.txt", "line1\n")
-	r := (&FileAssertion{Path: "actual.txt", Exists: true, TextEqualsTo: "nonexistent.txt"}).
+	r := (&FileAssertion{Path: "actual.txt", Exists: boolPtr(true), TextEqualsTo: "nonexistent.txt"}).
 		verify(planContext{basedir: dir})
 	if r.Success() {
 		t.Error("expected failure when the expected file does not exist")
@@ -192,7 +192,7 @@ func TestIsBinaryFile_EmptyFile(t *testing.T) {
 func TestFileContainsMatching_Pass(t *testing.T) {
 	dir := t.TempDir()
 	writeFile(t, dir, "out.log", "duration: 42ms\nstatus: ok\n")
-	r := (&FileAssertion{Path: "out.log", Exists: true, ContainsMatching: `duration: [0-9]+ms`}).
+	r := (&FileAssertion{Path: "out.log", Exists: boolPtr(true), ContainsMatching: `duration: [0-9]+ms`}).
 		verify(planContext{basedir: dir})
 	if !r.Success() {
 		t.Errorf("expected success for contains_matching, got: %v", r.Errors())
@@ -202,7 +202,7 @@ func TestFileContainsMatching_Pass(t *testing.T) {
 func TestFileContainsMatching_Fail(t *testing.T) {
 	dir := t.TempDir()
 	writeFile(t, dir, "out.log", "status: ok\n")
-	r := (&FileAssertion{Path: "out.log", Exists: true, ContainsMatching: `duration: [0-9]+ms`}).
+	r := (&FileAssertion{Path: "out.log", Exists: boolPtr(true), ContainsMatching: `duration: [0-9]+ms`}).
 		verify(planContext{basedir: dir})
 	if r.Success() {
 		t.Error("expected failure when file does not contain a match")
@@ -212,7 +212,7 @@ func TestFileContainsMatching_Fail(t *testing.T) {
 func TestFileContainsMatching_InvalidRegex(t *testing.T) {
 	dir := t.TempDir()
 	writeFile(t, dir, "out.log", "anything\n")
-	r := (&FileAssertion{Path: "out.log", Exists: true, ContainsMatching: `[invalid`}).
+	r := (&FileAssertion{Path: "out.log", Exists: boolPtr(true), ContainsMatching: `[invalid`}).
 		verify(planContext{basedir: dir})
 	if r.Success() {
 		t.Error("expected failure for invalid regex in contains_matching")
@@ -222,7 +222,7 @@ func TestFileContainsMatching_InvalidRegex(t *testing.T) {
 func TestFileContainsMatching_MultiLine(t *testing.T) {
 	dir := t.TempDir()
 	writeFile(t, dir, "out.log", "line1\nduration: 123ms\nline3\n")
-	r := (&FileAssertion{Path: "out.log", Exists: true, ContainsMatching: `duration: \d+ms`}).
+	r := (&FileAssertion{Path: "out.log", Exists: boolPtr(true), ContainsMatching: `duration: \d+ms`}).
 		verify(planContext{basedir: dir})
 	if !r.Success() {
 		t.Errorf("expected success matching within a multi-line file, got: %v", r.Errors())

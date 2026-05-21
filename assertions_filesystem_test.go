@@ -35,7 +35,7 @@ func TestFileSystemAssertionFactory_ExistsNil_DefaultsToTrue(t *testing.T) {
 	if !ok {
 		t.Fatalf("expected *FileAssertion, got %T", result)
 	}
-	if !fa.Exists {
+	if fa.Exists == nil || !*fa.Exists {
 		t.Error("expected Exists to default to true when the YAML field is absent")
 	}
 }
@@ -51,8 +51,28 @@ func TestFileSystemAssertionFactory_ExistsExplicitFalse(t *testing.T) {
 	if !ok {
 		t.Fatalf("expected *FileAssertion, got %T", result)
 	}
-	if fa.Exists {
+	if fa.Exists == nil || *fa.Exists {
 		t.Error("expected Exists=false to be propagated to the FileAssertion")
+	}
+}
+
+func TestFileAssertion_ExistsNil_DefaultsToTrue(t *testing.T) {
+	dir := t.TempDir()
+	writeFile(t, dir, "f.txt", "hello")
+	// Exists is nil (zero value for *bool) — should behave like true
+	r := (&FileAssertion{Path: "f.txt"}).verify(planContext{basedir: dir})
+	if !r.Success() {
+		t.Errorf("expected success: nil Exists on FileAssertion should default to true, got: %v", r.Errors())
+	}
+}
+
+func TestDirectoryAssertion_ExistsNil_DefaultsToTrue(t *testing.T) {
+	base := t.TempDir()
+	mkDir(t, base, "mydir")
+	// Exists is nil — should behave like true
+	r := (&DirectoryAssertion{Path: "mydir"}).verify(planContext{basedir: base})
+	if !r.Success() {
+		t.Errorf("expected success: nil Exists on DirectoryAssertion should default to true, got: %v", r.Errors())
 	}
 }
 
