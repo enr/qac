@@ -17,10 +17,17 @@ type fakeT struct {
 	errors     []string
 }
 
-func (f *fakeT) Helper()                              {}
-func (f *fakeT) Failed() bool                         { return f.failed }
-func (f *fakeT) Fatalf(format string, args ...any)    { f.fataled = true; f.failed = true; f.errors = append(f.errors, fmt.Sprintf(format, args...)) }
-func (f *fakeT) Errorf(format string, args ...any)    { f.failed = true; f.errors = append(f.errors, fmt.Sprintf(format, args...)) }
+func (f *fakeT) Helper()      {}
+func (f *fakeT) Failed() bool { return f.failed }
+func (f *fakeT) Fatalf(format string, args ...any) {
+	f.fataled = true
+	f.failed = true
+	f.errors = append(f.errors, fmt.Sprintf(format, args...))
+}
+func (f *fakeT) Errorf(format string, args ...any) {
+	f.failed = true
+	f.errors = append(f.errors, fmt.Sprintf(format, args...))
+}
 
 func TestExecuteFile_MissingFile_ReturnsError(t *testing.T) {
 	_, err := NewLauncher().ExecuteFile("definitely_nonexistent_plan_xyz.yaml")

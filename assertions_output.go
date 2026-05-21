@@ -21,7 +21,18 @@ func (a *OutputAssertion) verify(context planContext) AssertionResult {
 	if shouldBeEmpty && out != "" {
 		result.addErrorf("%s: expected empty but got\n%s", a.id, snippet(out))
 	}
+	if !a.verifyEquals(out, context, &result) {
+		return result
+	}
+	a.verifyPrefixSuffix(out, &result)
+	a.verifyContains(out, &result)
+	a.verifyLineCounts(out, &result)
+	a.verifyRegex(out, &result)
+	return result
+}
 
+// verifyEquals checks EqualsTo and EqualsToFile assertions. Returns false if a fatal infra error occurred.
+func (a *OutputAssertion) verifyEquals(out string, context planContext, result *AssertionResult) bool {
 	if a.EqualsTo != "" {
 		et := strings.TrimSpace(a.EqualsTo)
 		if out != et {
@@ -32,18 +43,22 @@ func (a *OutputAssertion) verify(context planContext) AssertionResult {
 		f, err := resolvePath(a.EqualsToFile, context)
 		if err != nil {
 			result.addInfraError(fmt.Errorf("resolving equals_to_file path %q: %w", a.EqualsToFile, err))
-			return result
+			return false
 		}
 		content, err := os.ReadFile(f)
 		if err != nil {
 			result.addInfraError(fmt.Errorf("reading equals_to_file %q: %w", f, err))
-			return result
+			return false
 		}
 		t := strings.TrimSpace(string(content))
 		if out != t {
 			result.addErrorf("%s: actual\n%s\nnot equal to:\n%s", a.id, snippet(out), snippet(t))
 		}
 	}
+	return true
+}
+
+func (a *OutputAssertion) verifyPrefixSuffix(out string, result *AssertionResult) {
 	if a.StartsWith != "" {
 		if !strings.HasPrefix(out, a.StartsWith) {
 			result.addErrorf("%s: output does not start with: %q\n%s", a.id, a.StartsWith, contextHint(out, a.StartsWith))
@@ -54,6 +69,9 @@ func (a *OutputAssertion) verify(context planContext) AssertionResult {
 			result.addErrorf("%s: output does not end with: %q\n%s", a.id, a.EndsWith, contextHintTail(out))
 		}
 	}
+}
+
+func (a *OutputAssertion) verifyContains(out string, result *AssertionResult) {
 	if len(a.ContainsAll) > 0 {
 		for _, t := range a.ContainsAll {
 			if !strings.Contains(out, t) {
@@ -85,6 +103,9 @@ func (a *OutputAssertion) verify(context planContext) AssertionResult {
 			result.addErrorf("%s: no line equals:\n%s", a.id, a.ContainsLine)
 		}
 	}
+}
+
+func (a *OutputAssertion) verifyLineCounts(out string, result *AssertionResult) {
 	if a.LineCount != nil {
 		got := len(outputLines(out))
 		if got != *a.LineCount {
@@ -97,6 +118,9 @@ func (a *OutputAssertion) verify(context planContext) AssertionResult {
 			result.addErrorf("%s: line count %d < required %d", a.id, got, *a.LineCountGte)
 		}
 	}
+}
+
+func (a *OutputAssertion) verifyRegex(out string, result *AssertionResult) {
 	if a.Matches != "" {
 		re, err := regexp.Compile(a.Matches)
 		if err != nil {
@@ -113,8 +137,6 @@ func (a *OutputAssertion) verify(context planContext) AssertionResult {
 			result.addErrorf("%s: actual output\n%s\nshould not match:\n%s", a.id, snippet(out), a.NotMatches)
 		}
 	}
-
-	return result
 }
 
 func (a *OutputAssertion) failContainsAny(out string) bool {

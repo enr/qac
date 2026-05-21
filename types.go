@@ -101,15 +101,15 @@ type SkipCondition struct {
 
 // Spec is the single test.
 type Spec struct {
-	id            string
-	Description   string        `yaml:"description"`
-	Tags          []string      `yaml:"tags"`
-	Skip          bool          `yaml:"skip"`
-	SkipIf        SkipCondition `yaml:"skip_if"`
+	id          string
+	Description string        `yaml:"description"`
+	Tags        []string      `yaml:"tags"`
+	Skip        bool          `yaml:"skip"`
+	SkipIf      SkipCondition `yaml:"skip_if"`
 	// Retries is the number of additional attempts after the first failure.
 	// Zero (default) means no retry.
-	Retries    int    `yaml:"retries"`
-	RetryDelay string `yaml:"retry_delay"`
+	Retries       int           `yaml:"retries"`
+	RetryDelay    string        `yaml:"retry_delay"`
 	Setup         []Command     `yaml:"setup"`
 	Teardown      []Command     `yaml:"teardown"`
 	Preconditions Preconditions `yaml:"preconditions"`
@@ -129,8 +129,8 @@ type FileSystemAssertion struct {
 	Directory string        `yaml:"directory"`
 	// Exists defaults to true when omitted (nil): the assertion checks the path exists.
 	// Set explicitly to false to assert the path must not exist.
-	Exists *bool `yaml:"exists"`
-	EqualsTo  string        `yaml:"equals_to"`
+	Exists   *bool  `yaml:"exists"`
+	EqualsTo string `yaml:"equals_to"`
 	// Only for files
 	TextEqualsTo     string   `yaml:"text_equals_to"`
 	ContainsAny      []string `yaml:"contains_any"`
@@ -158,21 +158,21 @@ func (e FileExtension) get() string {
 
 // FileAssertion is an assertion on a given file.
 type FileAssertion struct {
-	Path             string        `yaml:"path"`
-	Extension        FileExtension `yaml:"ext"`
+	Path      string        `yaml:"path"`
+	Extension FileExtension `yaml:"ext"`
 	// Exists defaults to true (nil): check that the file exists.
 	// Set to false to assert the file must not exist.
-	Exists           *bool         `yaml:"exists"`
-	EqualsTo         string        `yaml:"equals_to"`
-	TextEqualsTo     string        `yaml:"text_equals_to"`
-	ContainsAny      []string      `yaml:"contains_any"`
-	ContainsAll      []string      `yaml:"contains_all"`
-	ContainsMatching string        `yaml:"contains_matching"`
+	Exists           *bool    `yaml:"exists"`
+	EqualsTo         string   `yaml:"equals_to"`
+	TextEqualsTo     string   `yaml:"text_equals_to"`
+	ContainsAny      []string `yaml:"contains_any"`
+	ContainsAll      []string `yaml:"contains_all"`
+	ContainsMatching string   `yaml:"contains_matching"`
 }
 
 // DirectoryAssertion is an assertion on a given directory.
 type DirectoryAssertion struct {
-	Path            string   `yaml:"path"`
+	Path string `yaml:"path"`
 	// Exists defaults to true (nil): check that the directory exists.
 	// Set to false to assert the directory must not exist.
 	Exists          *bool    `yaml:"exists"`
@@ -208,7 +208,7 @@ type Command struct {
 	Cli string `yaml:"cli"`
 	// Exe is the path or name of the executable. The process is started
 	// directly without a shell. Mutually exclusive with cli.
-	Exe string `yaml:"exe"`
+	Exe string            `yaml:"exe"`
 	Env map[string]string `yaml:"env"`
 	// Extension is appended to Exe based on the runtime OS (e.g. ".exe" on Windows).
 	Extension FileExtension `yaml:"ext"`

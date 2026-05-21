@@ -164,7 +164,7 @@ func TestLauncher_SkipIfEnvSet_EnvAbsent_Runs(t *testing.T) {
 
 	specs := map[string]Spec{
 		"net-test": {
-			SkipIf: SkipCondition{EnvSet: "QAC_TEST_CI_ABSENT"},
+			SkipIf:  SkipCondition{EnvSet: "QAC_TEST_CI_ABSENT"},
 			Command: Command{Exe: "true"},
 			Expectations: Expectations{
 				StatusAssertion: StatusAssertion{EqualsTo: &exitCode},
