@@ -105,6 +105,19 @@ func (r *ReportBlock) TimedOut() bool {
 	return false
 }
 
+// Skipped returns true if this spec block was skipped (by skip field, skip_if, or tag filter).
+func (r *ReportBlock) Skipped() bool {
+	if len(r.entries) == 0 && r.index > 0 {
+		return true
+	}
+	for _, e := range r.entries {
+		if e.Kind() == SkippedType {
+			return true
+		}
+	}
+	return false
+}
+
 func newReportEntryFromAssertionResult(ar AssertionResult) ReportEntry {
 	k := ErrorType
 	if ar.Success() {

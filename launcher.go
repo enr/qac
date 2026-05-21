@@ -36,7 +36,8 @@ type Launcher struct {
 }
 
 // ExecuteFile run tests loaded from a file.
-func (l *Launcher) ExecuteFile(path string) *TestExecutionReport {
+func (l *Launcher) ExecuteFile(path string, opts ...RunOption) *TestExecutionReport {
+	cfg := applyOptions(opts)
 	report := &TestExecutionReport{}
 	absPath, err := filepath.Abs(path)
 	if err != nil {
@@ -49,23 +50,23 @@ func (l *Launcher) ExecuteFile(path string) *TestExecutionReport {
 		return report
 	}
 	context := planContext{basedir: filepath.Dir(absPath)}
-	return l.execute(plan, context)
+	return l.execute(plan, context, cfg)
 }
 
 // Execute run tests loaded from a TestPlan.
-func (l *Launcher) Execute(plan TestPlan) *TestExecutionReport {
+func (l *Launcher) Execute(plan TestPlan, opts ...RunOption) *TestExecutionReport {
+	cfg := applyOptions(opts)
 	report := &TestExecutionReport{}
 	basedir, err := os.Getwd()
 	if err != nil {
 		report.addEntryAsError("load", asInfraError(fmt.Errorf("getting working directory: %w", err)))
 		return report
 	}
-	context := planContext{}
-	context.basedir = basedir
-	return l.execute(plan, context)
+	context := planContext{basedir: basedir}
+	return l.execute(plan, context, cfg)
 }
 
-func (l *Launcher) execute(plan TestPlan, context planContext) *TestExecutionReport {
+func (l *Launcher) execute(plan TestPlan, context planContext, cfg runConfig) *TestExecutionReport {
 	report := &TestExecutionReport{}
 
 	// Plan teardown always runs at the end, even if preconditions, setup or specs fail.
@@ -97,11 +98,15 @@ func (l *Launcher) execute(plan TestPlan, context planContext) *TestExecutionRep
 	for i, key := range order {
 		spec := plan.Specs[key]
 		spec.id = key
-		context.currentSpec = spec
 		phase := specPhase(spec)
 		start := time.Now()
 		report.openBlock(phase, i+1, numSpecs, start)
-		l.executeSpec(context, report)
+		if reason := tagSkipReason(spec, cfg); reason != "" {
+			report.addEntrySkipped(phase, reason)
+		} else {
+			context.currentSpec = spec
+			l.executeSpec(context, report)
+		}
 		report.closeBlock(phase, time.Since(start))
 	}
 	return report

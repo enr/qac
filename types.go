@@ -103,6 +103,7 @@ type SkipCondition struct {
 type Spec struct {
 	id            string
 	Description   string        `yaml:"description"`
+	Tags          []string      `yaml:"tags"`
 	Skip          bool          `yaml:"skip"`
 	SkipIf        SkipCondition `yaml:"skip_if"`
 	Setup         []Command     `yaml:"setup"`
