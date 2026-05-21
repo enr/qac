@@ -53,8 +53,11 @@ func (l *Launcher) ExecuteFile(path string, opts ...RunOption) (*TestExecutionRe
 	return l.execute(plan, context, cfg), nil
 }
 
-// ExecuteFileT loads and runs a plan file, failing t immediately on load/parse
-// errors and recording every spec failure as a t.Errorf call.
+// ExecuteFileT loads the YAML plan at path, runs all specs, and integrates
+// with Go's testing.TB: load and parse errors call t.Fatalf (stopping the
+// test immediately); each spec failure calls t.Errorf. The returned report
+// is never nil.
+// Pass RunOption values (WithTags, SkipTags, FailFast) to filter specs.
 // It is the idiomatic single-line form for Go tests:
 //
 //	qac.NewLauncher().ExecuteFileT(t, "plan.yaml")
@@ -71,7 +74,9 @@ func (l *Launcher) ExecuteFileT(t testing.TB, path string, opts ...RunOption) *T
 	return report
 }
 
-// ExecuteT runs a TestPlan, recording every spec failure as a t.Errorf call.
+// ExecuteT runs plan and integrates with Go's testing.TB: each spec failure
+// calls t.Errorf. The returned report is never nil.
+// Pass RunOption values (WithTags, SkipTags, FailFast) to filter specs.
 // It is the idiomatic single-line form when constructing plans in Go:
 //
 //	qac.NewLauncher().ExecuteT(t, plan)
@@ -84,7 +89,11 @@ func (l *Launcher) ExecuteT(t testing.TB, plan TestPlan, opts ...RunOption) *Tes
 	return report
 }
 
-// Execute run tests loaded from a TestPlan.
+// Execute runs all specs in plan and returns a report of the results.
+// The report is never nil; spec-level failures are recorded inside it and do
+// not cause an error return. Pass RunOption values (WithTags, SkipTags,
+// FailFast) to control which specs run.
+// For use in Go tests prefer ExecuteT, which forwards spec failures to t.Errorf.
 func (l *Launcher) Execute(plan TestPlan, opts ...RunOption) *TestExecutionReport {
 	cfg := applyOptions(opts)
 	report := &TestExecutionReport{}
