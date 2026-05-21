@@ -101,13 +101,20 @@ func (l *Launcher) execute(plan TestPlan, context planContext, cfg runConfig) *T
 		phase := specPhase(spec)
 		start := time.Now()
 		report.openBlock(phase, i+1, numSpecs, start)
+		skipped := false
 		if reason := tagSkipReason(spec, cfg); reason != "" {
 			report.addEntrySkipped(phase, reason)
+			skipped = true
 		} else {
 			context.currentSpec = spec
 			l.executeSpec(context, report)
 		}
 		report.closeBlock(phase, time.Since(start))
+		if cfg.failFast && !skipped {
+			if b, ok := report.blockIndex[phase]; ok && b.Failed() {
+				return report
+			}
+		}
 	}
 	return report
 }

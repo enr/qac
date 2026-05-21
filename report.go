@@ -105,6 +105,16 @@ func (r *ReportBlock) TimedOut() bool {
 	return false
 }
 
+// Failed returns true if this block contains at least one error or timeout entry.
+func (r *ReportBlock) Failed() bool {
+	for _, e := range r.entries {
+		if e.Kind() == ErrorType || e.Kind() == TimedOutType {
+			return true
+		}
+	}
+	return false
+}
+
 // Skipped returns true if this spec block was skipped (by skip field, skip_if, or tag filter).
 func (r *ReportBlock) Skipped() bool {
 	if len(r.entries) == 0 && r.index > 0 {

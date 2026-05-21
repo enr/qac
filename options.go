@@ -6,6 +6,7 @@ type RunOption func(*runConfig)
 type runConfig struct {
 	withTags []string
 	skipTags []string
+	failFast bool
 }
 
 func applyOptions(opts []RunOption) runConfig {
@@ -29,5 +30,13 @@ func WithTags(tags ...string) RunOption {
 func SkipTags(tags ...string) RunOption {
 	return func(c *runConfig) {
 		c.skipTags = append(c.skipTags, tags...)
+	}
+}
+
+// FailFast stops execution after the first spec failure.
+// Subsequent specs are not run; plan-level teardown still executes.
+func FailFast() RunOption {
+	return func(c *runConfig) {
+		c.failFast = true
 	}
 }
