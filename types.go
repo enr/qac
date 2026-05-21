@@ -235,7 +235,7 @@ func (c Command) String() string {
 type StatusAssertion struct {
 	EqualsTo    *int `yaml:"equals_to"`
 	GreaterThan *int `yaml:"greater_than"`
-	LesserThan  *int `yaml:"lesser_than"`
+	LessThan    *int `yaml:"less_than"`
 }
 
 // OutputAssertion is an assertion on the output of a command: namely standard output and standard error.

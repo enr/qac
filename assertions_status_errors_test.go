@@ -5,22 +5,22 @@ import (
 	"testing"
 )
 
-// --- LesserThan missing failure cases ---
+// --- LessThan missing failure cases ---
 
-var statusLesserThanFailSpecs = []statusAssertionTestCase{
+var statusLessThanFailSpecs = []statusAssertionTestCase{
 	{exitCode: 1, value: 1, expectedSuccess: false}, // equal: not strictly less
 	{exitCode: 2, value: 1, expectedSuccess: false}, // greater: not less
 }
 
-func TestLesserThanAssertionFailure(t *testing.T) {
-	for _, spec := range statusLesserThanFailSpecs {
+func TestLessThanAssertionFailure(t *testing.T) {
+	for _, spec := range statusLessThanFailSpecs {
 		context := planContext{
 			commandResult: executionResult{exitCode: spec.exitCode},
 		}
-		sut := &StatusAssertion{LesserThan: &spec.value}
+		sut := &StatusAssertion{LessThan: &spec.value}
 		r := sut.verify(context)
 		if r.Success() != spec.expectedSuccess {
-			t.Errorf("LesserThan %d: exit %d: expected success=%t got success=%t",
+			t.Errorf("LessThan %d: exit %d: expected success=%t got success=%t",
 				spec.value, spec.exitCode, spec.expectedSuccess, r.Success())
 		}
 	}

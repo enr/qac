@@ -85,7 +85,7 @@ func TestGreaterThanAssertion(t *testing.T) {
 
 }
 
-var statusLesserThenSpecs = []statusAssertionTestCase{
+var statusLessThenSpecs = []statusAssertionTestCase{
 	{
 		exitCode:        0,
 		value:           1,
@@ -93,9 +93,9 @@ var statusLesserThenSpecs = []statusAssertionTestCase{
 	},
 }
 
-func TestLesserThanAssertion(t *testing.T) {
+func TestLessThanAssertion(t *testing.T) {
 
-	for _, spec := range statusLesserThenSpecs {
+	for _, spec := range statusLessThenSpecs {
 
 		context := planContext{
 			commandResult: executionResult{
@@ -103,11 +103,11 @@ func TestLesserThanAssertion(t *testing.T) {
 			},
 		}
 		sut := &StatusAssertion{
-			LesserThan: &spec.value,
+			LessThan: &spec.value,
 		}
 		assertionResult := sut.verify(context)
 		if assertionResult.Success() != spec.expectedSuccess {
-			t.Errorf(`status assertion expected %t but got %t for exit code %d (expected lesser than %d)`, spec.expectedSuccess, assertionResult.Success(), spec.exitCode, spec.value)
+			t.Errorf(`status assertion expected %t but got %t for exit code %d (expected less than %d)`, spec.expectedSuccess, assertionResult.Success(), spec.exitCode, spec.value)
 		}
 	}
 

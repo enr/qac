@@ -15,10 +15,10 @@ specs:
       status:
         greater_than: 0
 
-  lesser_than:
+  less_than:
     description: echo exit code is less than 1
     command:
       cli: echo test
     expectations:
       status:
-        lesser_than: 1
+        less_than: 1
