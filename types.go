@@ -98,10 +98,11 @@ type FileSystemAssertion struct {
 	Exists    *bool         `yaml:"exists"`
 	EqualsTo  string        `yaml:"equals_to"`
 	// Only for files
-	TextEqualsTo    string   `yaml:"text_equals_to"`
-	ContainsAny     []string `yaml:"contains_any"`
-	ContainsAll     []string `yaml:"contains_all"`
-	ContainsExactly []string `yaml:"contains_exactly"`
+	TextEqualsTo     string   `yaml:"text_equals_to"`
+	ContainsAny      []string `yaml:"contains_any"`
+	ContainsAll      []string `yaml:"contains_all"`
+	ContainsExactly  []string `yaml:"contains_exactly"`
+	ContainsMatching string   `yaml:"contains_matching"`
 }
 
 // FileExtension is added as suffix to file assertions' path and command's exe values
@@ -123,13 +124,14 @@ func (e FileExtension) get() string {
 
 // FileAssertion is an assertion on a given file.
 type FileAssertion struct {
-	Path         string        `yaml:"path"`
-	Extension    FileExtension `yaml:"ext"`
-	Exists       bool          `yaml:"exists"`
-	EqualsTo     string        `yaml:"equals_to"`
-	TextEqualsTo string        `yaml:"text_equals_to"`
-	ContainsAny  []string      `yaml:"contains_any"`
-	ContainsAll  []string      `yaml:"contains_all"`
+	Path             string        `yaml:"path"`
+	Extension        FileExtension `yaml:"ext"`
+	Exists           bool          `yaml:"exists"`
+	EqualsTo         string        `yaml:"equals_to"`
+	TextEqualsTo     string        `yaml:"text_equals_to"`
+	ContainsAny      []string      `yaml:"contains_any"`
+	ContainsAll      []string      `yaml:"contains_all"`
+	ContainsMatching string        `yaml:"contains_matching"`
 }
 
 // DirectoryAssertion is an assertion on a given directory.
@@ -190,6 +192,10 @@ type OutputAssertion struct {
 	ContainsAny  []string `yaml:"contains_any"`
 	ContainsAll  []string `yaml:"contains_all"`
 	ContainsNone []string `yaml:"contains_none"`
+	// Matches requires the entire trimmed output to match the regular expression.
+	Matches string `yaml:"matches"`
+	// NotMatches requires the entire trimmed output NOT to match the regular expression.
+	NotMatches string `yaml:"not_matches"`
 }
 
 // OutputAssertions is the aggregate of stdout and stderr assertions.

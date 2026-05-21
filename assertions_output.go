@@ -3,6 +3,7 @@ package qac
 import (
 	"fmt"
 	"os"
+	"regexp"
 	"strings"
 )
 
@@ -70,6 +71,22 @@ func (a *OutputAssertion) verify(context planContext) AssertionResult {
 			if strings.Contains(out, t) {
 				result.addErrorf("%s: actual output\n%s\ncontains:\n%s", a.id, snippet(out), t)
 			}
+		}
+	}
+	if a.Matches != "" {
+		re, err := regexp.Compile(a.Matches)
+		if err != nil {
+			result.addConfigError(fmt.Errorf("%s: invalid regex in matches %q: %w", a.id, a.Matches, err))
+		} else if !re.MatchString(out) {
+			result.addErrorf("%s: actual output\n%s\ndoes not match:\n%s", a.id, snippet(out), a.Matches)
+		}
+	}
+	if a.NotMatches != "" {
+		re, err := regexp.Compile(a.NotMatches)
+		if err != nil {
+			result.addConfigError(fmt.Errorf("%s: invalid regex in not_matches %q: %w", a.id, a.NotMatches, err))
+		} else if re.MatchString(out) {
+			result.addErrorf("%s: actual output\n%s\nshould not match:\n%s", a.id, snippet(out), a.NotMatches)
 		}
 	}
 

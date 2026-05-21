@@ -58,11 +58,12 @@ func TestFileSystemAssertionFactory_ExistsExplicitFalse(t *testing.T) {
 
 func TestFileSystemAssertionFactory_FieldsPropagate_File(t *testing.T) {
 	a := &FileSystemAssertion{
-		File:         "f.txt",
-		EqualsTo:     "ref.txt",
-		TextEqualsTo: "ref2.txt",
-		ContainsAll:  []string{"aa"},
-		ContainsAny:  []string{"bb"},
+		File:             "f.txt",
+		EqualsTo:         "ref.txt",
+		TextEqualsTo:     "ref2.txt",
+		ContainsAll:      []string{"aa"},
+		ContainsAny:      []string{"bb"},
+		ContainsMatching: `\d+`,
 	}
 	result, err := a.actualAssertion(planContext{})
 	if err != nil {
@@ -72,6 +73,17 @@ func TestFileSystemAssertionFactory_FieldsPropagate_File(t *testing.T) {
 	if fa.EqualsTo != "ref.txt" || fa.TextEqualsTo != "ref2.txt" ||
 		len(fa.ContainsAll) != 1 || len(fa.ContainsAny) != 1 {
 		t.Errorf("file assertion fields not propagated correctly: %+v", fa)
+	}
+	if fa.ContainsMatching != `\d+` {
+		t.Errorf("contains_matching not propagated: got %q", fa.ContainsMatching)
+	}
+}
+
+func TestFileSystemAssertionFactory_ContainsMatchingRejectedForDirectory(t *testing.T) {
+	a := &FileSystemAssertion{Directory: "d", ContainsMatching: `\d+`}
+	_, err := a.actualAssertion(planContext{})
+	if err == nil {
+		t.Fatal("expected error when contains_matching is used on a directory assertion")
 	}
 }
 

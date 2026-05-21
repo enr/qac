@@ -175,3 +175,82 @@ func TestOutputEqualsToFile_FileNotFound(t *testing.T) {
 		t.Error("expected failure when the reference file does not exist")
 	}
 }
+
+// --- Matches ---
+
+func TestOutputMatches_Pass(t *testing.T) {
+	r := (&OutputAssertion{id: "stdout", Matches: `^hello \w+$`}).verify(outputCtx("hello world", ""))
+	if !r.Success() {
+		t.Errorf("expected success for matches, got: %v", r.Errors())
+	}
+}
+
+func TestOutputMatches_Fail(t *testing.T) {
+	r := (&OutputAssertion{id: "stdout", Matches: `^hello \w+$`}).verify(outputCtx("goodbye world", ""))
+	if r.Success() {
+		t.Error("expected failure when output does not match the pattern")
+	}
+}
+
+func TestOutputMatches_InvalidRegex(t *testing.T) {
+	r := (&OutputAssertion{id: "stdout", Matches: `[invalid`}).verify(outputCtx("anything", ""))
+	if r.Success() {
+		t.Error("expected failure for invalid regex in matches")
+	}
+}
+
+func TestOutputMatches_Stderr(t *testing.T) {
+	r := (&OutputAssertion{id: "stderr", Matches: `ERROR`}).verify(outputCtx("", "ERROR: oops"))
+	if !r.Success() {
+		t.Errorf("expected success matching stderr, got: %v", r.Errors())
+	}
+}
+
+// --- NotMatches ---
+
+func TestOutputNotMatches_Pass(t *testing.T) {
+	r := (&OutputAssertion{id: "stdout", NotMatches: `ERROR|WARN`}).verify(outputCtx("all good", ""))
+	if !r.Success() {
+		t.Errorf("expected success when output does not match not_matches, got: %v", r.Errors())
+	}
+}
+
+func TestOutputNotMatches_Fail(t *testing.T) {
+	r := (&OutputAssertion{id: "stdout", NotMatches: `ERROR|WARN`}).verify(outputCtx("WARNING: low disk", ""))
+	if r.Success() {
+		t.Error("expected failure when output matches the not_matches pattern")
+	}
+}
+
+func TestOutputNotMatches_InvalidRegex(t *testing.T) {
+	r := (&OutputAssertion{id: "stdout", NotMatches: `[invalid`}).verify(outputCtx("anything", ""))
+	if r.Success() {
+		t.Error("expected failure for invalid regex in not_matches")
+	}
+}
+
+func TestOutputMatchesAndNotMatches_BothApplied(t *testing.T) {
+	// Both pass: matches the required pattern and avoids the forbidden one.
+	r := (&OutputAssertion{
+		id:         "stdout",
+		Matches:    `^Created resource [a-f0-9]{8}$`,
+		NotMatches: `ERROR|WARN`,
+	}).verify(outputCtx("Created resource a1b2c3d4", ""))
+	if !r.Success() {
+		t.Errorf("expected success, got: %v", r.Errors())
+	}
+}
+
+func TestOutputMatchesAndNotMatches_MatchesFails(t *testing.T) {
+	r := (&OutputAssertion{
+		id:         "stdout",
+		Matches:    `^Created resource [a-f0-9]{8}$`,
+		NotMatches: `ERROR|WARN`,
+	}).verify(outputCtx("ERROR: creation failed", ""))
+	if r.Success() {
+		t.Error("expected two failures (matches + not_matches), got success")
+	}
+	if len(r.Errors()) != 2 {
+		t.Errorf("expected 2 errors, got %d: %v", len(r.Errors()), r.Errors())
+	}
+}

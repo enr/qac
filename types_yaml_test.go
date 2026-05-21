@@ -205,3 +205,83 @@ specs:
 		t.Errorf("error message should mention 'varz', got: %v", err)
 	}
 }
+
+func TestRegexFieldsAccepted(t *testing.T) {
+	input := `
+specs:
+  test:
+    command:
+      cli: my-tool
+    expectations:
+      output:
+        stdout:
+          matches: "^ok$"
+          not_matches: "ERROR|WARN"
+      fs:
+        - file: out.log
+          contains_matching: "duration: [0-9]+ms"
+`
+	plan, err := unmarshalPlan(t, input)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	stdout := plan.Specs["test"].Expectations.OutputAssertions.Stdout
+	if stdout.Matches != "^ok$" {
+		t.Errorf("matches = %q, want %q", stdout.Matches, "^ok$")
+	}
+	if stdout.NotMatches != "ERROR|WARN" {
+		t.Errorf("not_matches = %q, want %q", stdout.NotMatches, "ERROR|WARN")
+	}
+	fs := plan.Specs["test"].Expectations.FileSystemAssertions
+	if len(fs) != 1 || fs[0].ContainsMatching != "duration: [0-9]+ms" {
+		t.Errorf("contains_matching not parsed correctly, got: %+v", fs)
+	}
+}
+
+func TestRegexTyposRejected(t *testing.T) {
+	cases := []struct {
+		name  string
+		field string
+		input string
+	}{
+		{
+			name:  "matchez typo",
+			field: "matchez",
+			input: `
+specs:
+  test:
+    command:
+      cli: my-tool
+    expectations:
+      output:
+        stdout:
+          matchez: "^ok$"
+`,
+		},
+		{
+			name:  "contains_matchin typo",
+			field: "contains_matchin",
+			input: `
+specs:
+  test:
+    command:
+      cli: my-tool
+    expectations:
+      fs:
+        - file: out.log
+          contains_matchin: "pattern"
+`,
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			_, err := unmarshalPlan(t, tc.input)
+			if err == nil {
+				t.Fatalf("expected error for unknown field %q, got nil", tc.field)
+			}
+			if !strings.Contains(err.Error(), tc.field) {
+				t.Errorf("error should mention %q, got: %v", tc.field, err)
+			}
+		})
+	}
+}

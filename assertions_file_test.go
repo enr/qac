@@ -186,3 +186,45 @@ func TestIsBinaryFile_EmptyFile(t *testing.T) {
 		t.Error("expected empty file to not be detected as binary")
 	}
 }
+
+// --- ContainsMatching ---
+
+func TestFileContainsMatching_Pass(t *testing.T) {
+	dir := t.TempDir()
+	writeFile(t, dir, "out.log", "duration: 42ms\nstatus: ok\n")
+	r := (&FileAssertion{Path: "out.log", Exists: true, ContainsMatching: `duration: [0-9]+ms`}).
+		verify(planContext{basedir: dir})
+	if !r.Success() {
+		t.Errorf("expected success for contains_matching, got: %v", r.Errors())
+	}
+}
+
+func TestFileContainsMatching_Fail(t *testing.T) {
+	dir := t.TempDir()
+	writeFile(t, dir, "out.log", "status: ok\n")
+	r := (&FileAssertion{Path: "out.log", Exists: true, ContainsMatching: `duration: [0-9]+ms`}).
+		verify(planContext{basedir: dir})
+	if r.Success() {
+		t.Error("expected failure when file does not contain a match")
+	}
+}
+
+func TestFileContainsMatching_InvalidRegex(t *testing.T) {
+	dir := t.TempDir()
+	writeFile(t, dir, "out.log", "anything\n")
+	r := (&FileAssertion{Path: "out.log", Exists: true, ContainsMatching: `[invalid`}).
+		verify(planContext{basedir: dir})
+	if r.Success() {
+		t.Error("expected failure for invalid regex in contains_matching")
+	}
+}
+
+func TestFileContainsMatching_MultiLine(t *testing.T) {
+	dir := t.TempDir()
+	writeFile(t, dir, "out.log", "line1\nduration: 123ms\nline3\n")
+	r := (&FileAssertion{Path: "out.log", Exists: true, ContainsMatching: `duration: \d+ms`}).
+		verify(planContext{basedir: dir})
+	if !r.Success() {
+		t.Errorf("expected success matching within a multi-line file, got: %v", r.Errors())
+	}
+}
