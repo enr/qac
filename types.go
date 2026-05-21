@@ -151,6 +151,9 @@ type Command struct {
 	// added to exe
 	Extension FileExtension `yaml:"ext"`
 	Args      []string      `yaml:"args"`
+	// Maximum time to wait for the command; parsed by time.ParseDuration (e.g. "30s", "1m").
+	// Zero or empty means no timeout.
+	Timeout string `yaml:"timeout"`
 }
 
 func (c Command) String() string {

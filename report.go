@@ -19,6 +19,8 @@ const (
 	SuccessType
 	// SkippedType means the spec was not executed because preconditions were not met
 	SkippedType
+	// TimedOutType means the command exceeded its configured timeout
+	TimedOutType
 )
 
 // ReportEntry is a single unit of information in a report.
@@ -53,6 +55,8 @@ func (t ReportEntryType) String() string {
 		return "success"
 	case SkippedType:
 		return "skipped"
+	case TimedOutType:
+		return "timedout"
 	default:
 		return "none"
 	}
@@ -91,6 +95,16 @@ func (r *ReportBlock) StartedAt() time.Time { return r.startedAt }
 // Duration returns how long this block took to execute.
 func (r *ReportBlock) Duration() time.Duration { return r.duration }
 
+// TimedOut returns true if the command in this block exceeded its configured timeout.
+func (r *ReportBlock) TimedOut() bool {
+	for _, e := range r.entries {
+		if e.Kind() == TimedOutType {
+			return true
+		}
+	}
+	return false
+}
+
 func newReportEntryFromAssertionResult(ar AssertionResult) ReportEntry {
 	k := ErrorType
 	if ar.Success() {
@@ -109,6 +123,11 @@ func newReportEntryInfo(msg string) ReportEntry {
 
 func newReportEntrySkipped(reason string) ReportEntry {
 	return ReportEntry{description: reason, kind: SkippedType, errors: []error{}}
+}
+
+func newReportEntryTimedOut(timeout string) ReportEntry {
+	msg := fmt.Sprintf("command timed out after %s", timeout)
+	return ReportEntry{description: msg, kind: TimedOutType, errors: []error{fmt.Errorf("%s", msg)}}
 }
 
 // TestExecutionReport is the full report on a test execution
@@ -138,6 +157,11 @@ func (r *TestExecutionReport) addEntryInfo(phase string, msg string) {
 
 func (r *TestExecutionReport) addEntrySkipped(phase string, reason string) {
 	entry := newReportEntrySkipped(reason)
+	r.addEntry(phase, entry)
+}
+
+func (r *TestExecutionReport) addEntryTimedOut(phase string, timeout string) {
+	entry := newReportEntryTimedOut(timeout)
 	r.addEntry(phase, entry)
 }
 
@@ -234,6 +258,8 @@ func (r *testLogsReporter) Publish(report *TestExecutionReport) error {
 				r.t.Logf("  | SKIP %s", entry.Description())
 			case InfoType:
 				r.t.Logf("  | INFO %s", entry.Description())
+			case TimedOutType:
+				r.t.Logf("  | TIMEOUT %s", entry.Description())
 			}
 		}
 	}
@@ -270,6 +296,8 @@ func (r *consoleReporter) Publish(report *TestExecutionReport) error {
 				fmt.Printf("  | SKIP %s\n", entry.Description())
 			case InfoType:
 				fmt.Printf("  | INFO %s\n", entry.Description())
+			case TimedOutType:
+				fmt.Printf("  | TIMEOUT %s\n", entry.Description())
 			}
 		}
 	}
@@ -278,7 +306,7 @@ func (r *consoleReporter) Publish(report *TestExecutionReport) error {
 
 func blockStatus(block *ReportBlock) string {
 	for _, entry := range block.Entries() {
-		if entry.Kind() == ErrorType {
+		if entry.Kind() == ErrorType || entry.Kind() == TimedOutType {
 			return "KO"
 		}
 	}

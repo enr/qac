@@ -155,6 +155,10 @@ func (l *Launcher) executeSpec(context planContext, report *TestExecutionReport)
 	}
 	command.WorkingDir = wd
 	context.commandResult = l.executor.execute(command)
+	if context.commandResult.timedOut {
+		report.addEntryTimedOut(phase, command.Timeout)
+		return
+	}
 	expectations := spec.Expectations
 	report.addEntryAsAssertionResult(phase, expectations.StatusAssertion.verify(context))
 	oa := expectations.OutputAssertions.Stdout

@@ -125,3 +125,43 @@ speks:
 		t.Errorf("error message should mention the unknown field 'speks', got: %v", err)
 	}
 }
+
+func TestTimeoutFieldAccepted(t *testing.T) {
+	input := `
+specs:
+  test:
+    command:
+      cli: my-tool process
+      timeout: 30s
+    expectations:
+      status:
+        equals_to: 0
+`
+	plan, err := unmarshalPlan(t, input)
+	if err != nil {
+		t.Fatalf("unexpected error parsing timeout field: %v", err)
+	}
+	if plan.Specs["test"].Command.Timeout != "30s" {
+		t.Errorf("expected timeout %q, got %q", "30s", plan.Specs["test"].Command.Timeout)
+	}
+}
+
+func TestTimeoutTypoRejected(t *testing.T) {
+	input := `
+specs:
+  test:
+    command:
+      cli: my-tool process
+      timeot: 30s
+    expectations:
+      status:
+        equals_to: 0
+`
+	_, err := unmarshalPlan(t, input)
+	if err == nil {
+		t.Fatal("expected error for unknown field 'timeot', got nil")
+	}
+	if !strings.Contains(err.Error(), "timeot") {
+		t.Errorf("error message should mention the unknown field 'timeot', got: %v", err)
+	}
+}
