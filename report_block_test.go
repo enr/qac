@@ -1,6 +1,7 @@
 package qac
 
 import (
+	"strings"
 	"testing"
 	"time"
 )
@@ -81,6 +82,61 @@ func TestNonSpecBlockHasZeroIndex(t *testing.T) {
 		if b.Phase() == "preconditions" && b.Index() != 0 {
 			t.Errorf("preconditions block should have index=0, got %d", b.Index())
 		}
+	}
+}
+
+func TestPlanPreconditionFailure_MessageFormat(t *testing.T) {
+	// When a plan-level precondition fails the error entry must say
+	// "precondition failed: ..." so the user knows immediately what went wrong,
+	// and a separate info entry must say "plan execution stopped".
+	// We use Exists:true for a path we know doesn't exist, so the assertion fails.
+	plan := TestPlan{
+		Preconditions: Preconditions{
+			FileSystemAssertions: []FileSystemAssertion{
+				{File: "definitely_nonexistent_precond_xyz.txt", Exists: boolPtr(true)},
+			},
+		},
+		Specs: map[string]Spec{
+			"unreachable": {id: "unreachable", Command: Command{Cli: "true"}},
+		},
+		specOrder: []string{"unreachable"},
+	}
+	launcher := newLauncher(&fixedValueExecutor{exitCode: 0})
+	report := launcher.Execute(plan)
+
+	// Find the preconditions block.
+	var precBlock *ReportBlock
+	for _, b := range report.Blocks() {
+		if b.Phase() == "preconditions" {
+			precBlock = b
+			break
+		}
+	}
+	if precBlock == nil {
+		t.Fatal("preconditions block not found in report")
+	}
+
+	foundFailed := false
+	foundStopped := false
+	for _, e := range precBlock.Entries() {
+		// Error entry must start with "precondition failed:"
+		if e.Kind() == ErrorType {
+			for _, err := range e.Errors() {
+				if strings.HasPrefix(err.Error(), "precondition failed:") {
+					foundFailed = true
+				}
+			}
+		}
+		// Info entry must say "plan execution stopped"
+		if e.Kind() == InfoType && strings.Contains(e.Description(), "plan execution stopped") {
+			foundStopped = true
+		}
+	}
+	if !foundFailed {
+		t.Errorf("expected an error entry starting with 'precondition failed:', got entries: %v", precBlock.Entries())
+	}
+	if !foundStopped {
+		t.Errorf("expected an info entry containing 'plan execution stopped', got entries: %v", precBlock.Entries())
 	}
 }
 

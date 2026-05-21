@@ -3,6 +3,7 @@ package qac
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -32,6 +33,30 @@ func TestFileAssertion_ExistsTrue_FileMissing(t *testing.T) {
 	if r.Success() {
 		t.Error("expected failure when file is absent but Exists=true")
 	}
+	if !errContains(r.Errors(), "should exist but does not") {
+		t.Errorf("expected natural-language error, got: %v", r.Errors())
+	}
+}
+
+func TestFileAssertion_ExistsFalse_FilePresent_ErrorWording(t *testing.T) {
+	dir := t.TempDir()
+	writeFile(t, dir, "present.txt", "content")
+	r := (&FileAssertion{Path: "present.txt", Exists: boolPtr(false)}).verify(planContext{basedir: dir})
+	if r.Success() {
+		t.Error("expected failure when file is present but Exists=false")
+	}
+	if !errContains(r.Errors(), "should not exist but does") {
+		t.Errorf("expected natural-language error, got: %v", r.Errors())
+	}
+}
+
+func errContains(errs []error, substr string) bool {
+	for _, e := range errs {
+		if strings.Contains(e.Error(), substr) {
+			return true
+		}
+	}
+	return false
 }
 
 func TestFileAssertion_ExistsFalse_FileMissing(t *testing.T) {

@@ -33,6 +33,21 @@ func TestDirectoryAssertion_ExistsTrue_DirMissing(t *testing.T) {
 	if r.Success() {
 		t.Error("expected failure when directory does not exist but Exists=true")
 	}
+	if !errContains(r.Errors(), "should exist but does not") {
+		t.Errorf("expected natural-language error, got: %v", r.Errors())
+	}
+}
+
+func TestDirectoryAssertion_ExistsFalse_DirPresent_ErrorWording(t *testing.T) {
+	base := t.TempDir()
+	mkDir(t, base, "present")
+	r := (&DirectoryAssertion{Path: "present", Exists: boolPtr(false)}).verify(planContext{basedir: base})
+	if r.Success() {
+		t.Error("expected failure when directory is present but Exists=false")
+	}
+	if !errContains(r.Errors(), "should not exist but does") {
+		t.Errorf("expected natural-language error, got: %v", r.Errors())
+	}
 }
 
 func TestDirectoryAssertion_ExistsFalse_DirMissing(t *testing.T) {

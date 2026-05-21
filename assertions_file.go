@@ -31,8 +31,11 @@ func (a *FileAssertion) verify(context planContext) AssertionResult {
 	fileExists := files.Exists(actualPath)
 	shouldExist := a.Exists == nil || *a.Exists
 	if shouldExist != fileExists {
-		err := fmt.Errorf(`file %s exist expected %t but got %t`, actualPath, shouldExist, fileExists)
-		result.addError(err)
+		if shouldExist {
+			result.addErrorf("file %s should exist but does not", actualPath)
+		} else {
+			result.addErrorf("file %s should not exist but does", actualPath)
+		}
 		return result
 	}
 	if !shouldExist {

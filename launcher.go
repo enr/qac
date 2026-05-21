@@ -75,9 +75,9 @@ func (l *Launcher) execute(plan TestPlan, context planContext, cfg runConfig) *T
 	}
 
 	preconditions := plan.Preconditions
-	proceed, failed, total := l.verifyPreconditions(preconditions, context, report)
+	proceed, _, _ := l.verifyPreconditions(preconditions, context, report)
 	if !proceed {
-		report.addEntryInfo("preconditions", fmt.Sprintf("%d of %d preconditions failed, stopping plan execution", failed, total))
+		report.addEntryInfo("preconditions", "plan execution stopped")
 		return report
 	}
 
@@ -264,13 +264,17 @@ func (l *Launcher) verifyPreconditions(preconditions Preconditions, context plan
 	for _, f := range fa {
 		a, err := f.actualAssertion(context)
 		if err != nil {
-			report.addEntryAsError(phase, err)
+			report.addEntryAsError(phase, fmt.Errorf("precondition failed: %w", err))
 			failed++
 			continue
 		}
 		result := a.verify(context)
-		report.addEntryAsAssertionResult(phase, result)
-		if !result.Success() {
+		if result.Success() {
+			report.addEntryAsAssertionResult(phase, result)
+		} else {
+			for _, e := range result.Errors() {
+				report.addEntryAsError(phase, fmt.Errorf("precondition failed: %s", e.Error()))
+			}
 			failed++
 		}
 	}
@@ -285,9 +289,9 @@ func (l *Launcher) executeSpec(context planContext, report *TestExecutionReport)
 		return
 	}
 	preconditions := spec.Preconditions
-	proceed, failed, total := l.verifyPreconditions(preconditions, context, report)
+	proceed, _, _ := l.verifyPreconditions(preconditions, context, report)
 	if !proceed {
-		report.addEntrySkipped(phase, fmt.Sprintf("skipped: %d of %d preconditions failed", failed, total))
+		report.addEntrySkipped(phase, "skipped: preconditions not met")
 		return
 	}
 	// Spec teardown always runs from this point on, even if setup or the command fail.
