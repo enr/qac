@@ -46,30 +46,30 @@ func (a *OutputAssertion) verify(context planContext) AssertionResult {
 	}
 	if a.StartsWith != "" {
 		if !strings.HasPrefix(out, a.StartsWith) {
-			result.addErrorf("%s: actual output\n%s\ndoes not start with:\n%s", a.id, snippet(out), a.StartsWith)
+			result.addErrorf("%s: output does not start with: %q\n%s", a.id, a.StartsWith, contextHint(out, a.StartsWith))
 		}
 	}
 	if a.EndsWith != "" {
 		if !strings.HasSuffix(out, a.EndsWith) {
-			result.addErrorf("%s: actual output\n%s\ndoes not end with:\n%s", a.id, snippetTail(out), a.EndsWith)
+			result.addErrorf("%s: output does not end with: %q\n%s", a.id, a.EndsWith, contextHintTail(out))
 		}
 	}
 	if len(a.ContainsAll) > 0 {
 		for _, t := range a.ContainsAll {
 			if !strings.Contains(out, t) {
-				result.addErrorf("%s: actual output\n%s\ndoes not contain:\n%s", a.id, snippet(out), t)
+				result.addErrorf("%s: output does not contain: %q\n%s", a.id, t, contextHint(out, t))
 			}
 		}
 	}
 	if len(a.ContainsAny) > 0 {
 		if a.failContainsAny(out) {
-			result.addErrorf("%s: actual output\n%s\ndoes not contain any of:\n%q", a.id, snippet(out), a.ContainsAny)
+			result.addErrorf("%s: output does not contain any of: %q\n%s", a.id, a.ContainsAny, contextHint(out, ""))
 		}
 	}
 	if len(a.ContainsNone) > 0 {
 		for _, t := range a.ContainsNone {
 			if strings.Contains(out, t) {
-				result.addErrorf("%s: actual output\n%s\ncontains:\n%s", a.id, snippet(out), t)
+				result.addErrorf("%s: output should not contain: %q\n%s", a.id, t, contextHintAround(out, t))
 			}
 		}
 	}
