@@ -183,6 +183,10 @@ type Command struct {
 	// Maximum time to wait for the command; parsed by time.ParseDuration (e.g. "30s", "1m").
 	// Zero or empty means no timeout.
 	Timeout string `yaml:"timeout"`
+	// Stdin is an inline string piped to the command's standard input.
+	Stdin string `yaml:"stdin"`
+	// StdinFile is a path to a file whose contents are piped to standard input.
+	StdinFile string `yaml:"stdin_file"`
 }
 
 func (c Command) String() string {

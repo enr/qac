@@ -130,6 +130,26 @@ func (l *Launcher) execute(plan TestPlan, context planContext) *TestExecutionRep
 func (l *Launcher) runCommands(commands []Command, phase string, ctx planContext, report *TestExecutionReport, stopOnFailure bool) bool {
 	allOk := true
 	for _, cmd := range commands {
+		if cmd.Stdin != "" && cmd.StdinFile != "" {
+			report.addEntryAsError(phase, asConfigError(fmt.Errorf("stdin and stdin_file are mutually exclusive")))
+			allOk = false
+			if stopOnFailure {
+				return false
+			}
+			continue
+		}
+		if cmd.StdinFile != "" {
+			resolved, err := resolvePath(cmd.StdinFile, ctx)
+			if err != nil {
+				report.addEntryAsError(phase, asConfigError(fmt.Errorf("resolving stdin_file %q: %w", cmd.StdinFile, err)))
+				allOk = false
+				if stopOnFailure {
+					return false
+				}
+				continue
+			}
+			cmd.StdinFile = resolved
+		}
 		wd, err := resolvePath(cmd.WorkingDir, ctx)
 		if err != nil {
 			report.addEntryAsError(phase, asInfraError(err))
@@ -225,6 +245,18 @@ func (l *Launcher) executeSpec(context planContext, report *TestExecutionReport)
 		}
 	}
 	command := spec.Command
+	if command.Stdin != "" && command.StdinFile != "" {
+		report.addEntryAsError(phase, asConfigError(fmt.Errorf("stdin and stdin_file are mutually exclusive")))
+		return
+	}
+	if command.StdinFile != "" {
+		resolved, err := resolvePath(command.StdinFile, context)
+		if err != nil {
+			report.addEntryAsError(phase, asConfigError(fmt.Errorf("resolving stdin_file %q: %w", command.StdinFile, err)))
+			return
+		}
+		command.StdinFile = resolved
+	}
 	wd, err := resolvePath(command.WorkingDir, context)
 	if err != nil {
 		report.addEntryAsError(phase, asInfraError(err))

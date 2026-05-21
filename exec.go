@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"runtime"
@@ -34,11 +35,14 @@ type runcmdExecutor struct {
 }
 
 func (e *runcmdExecutor) execute(c Command) executionResult {
+	var timeout time.Duration
 	if c.Timeout != "" {
-		d, err := time.ParseDuration(c.Timeout)
-		if err == nil && d > 0 {
-			return e.executeWithTimeout(c, d)
+		if d, err := time.ParseDuration(c.Timeout); err == nil && d > 0 {
+			timeout = d
 		}
+	}
+	if timeout > 0 || c.Stdin != "" || c.StdinFile != "" {
+		return e.executeDirect(c, timeout)
 	}
 	command := e.toRuncmd(c)
 	res := command.Run()
@@ -52,8 +56,16 @@ func (e *runcmdExecutor) execute(c Command) executionResult {
 	}
 }
 
-func (e *runcmdExecutor) executeWithTimeout(c Command, timeout time.Duration) executionResult {
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+// executeDirect runs a command via exec.Cmd, supporting optional timeout and stdin.
+// timeout == 0 means no timeout.
+func (e *runcmdExecutor) executeDirect(c Command, timeout time.Duration) executionResult {
+	var ctx context.Context
+	var cancel context.CancelFunc
+	if timeout > 0 {
+		ctx, cancel = context.WithTimeout(context.Background(), timeout)
+	} else {
+		ctx, cancel = context.WithCancel(context.Background())
+	}
 	defer cancel()
 
 	fullCmd, cmd, err := e.buildExecCmd(ctx, c)
@@ -69,6 +81,19 @@ func (e *runcmdExecutor) executeWithTimeout(c Command, timeout time.Duration) ex
 	}
 	if len(c.Env) > 0 {
 		cmd.Env = mergeEnv(c.Env)
+	}
+
+	if c.Stdin != "" {
+		cmd.Stdin = strings.NewReader(c.Stdin)
+	} else if c.StdinFile != "" {
+		f, openErr := os.Open(c.StdinFile)
+		if openErr != nil {
+			return executionResult{exitCode: -1, err: fmt.Errorf("opening stdin_file %q: %w", c.StdinFile, openErr)}
+		}
+		defer f.Close()
+		cmd.Stdin = f
+	} else {
+		cmd.Stdin = io.Reader(nil)
 	}
 
 	runErr := cmd.Run()
