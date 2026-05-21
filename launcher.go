@@ -1,7 +1,6 @@
 package qac
 
 import (
-	"bytes"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -9,7 +8,6 @@ import (
 	"time"
 
 	"github.com/enr/go-files/files"
-	"gopkg.in/yaml.v3"
 )
 
 type planContext struct {
@@ -40,32 +38,17 @@ type Launcher struct {
 // ExecuteFile run tests loaded from a file.
 func (l *Launcher) ExecuteFile(path string) *TestExecutionReport {
 	report := &TestExecutionReport{}
-	dat, err := os.ReadFile(path)
+	absPath, err := filepath.Abs(path)
 	if err != nil {
-		report.addEntryAsError("load", asConfigError(fmt.Errorf("reading test plan %q: %w", path, err)))
+		report.addEntryAsError("load", asInfraError(fmt.Errorf("resolving path %q: %w", path, err)))
 		return report
 	}
-	// Pre-parse to extract vars, then interpolate before the full strict parse.
-	var planVars struct {
-		Vars map[string]string `yaml:"vars"`
-	}
-	_ = yaml.Unmarshal(dat, &planVars)
-	dat = interpolate(dat, planVars.Vars)
-
-	plan := TestPlan{}
-	dec := yaml.NewDecoder(bytes.NewReader(dat))
-	dec.KnownFields(true)
-	if err = dec.Decode(&plan); err != nil {
+	plan, err := loadPlanFile(absPath, make(map[string]bool))
+	if err != nil {
 		report.addEntryAsError("load", asConfigError(fmt.Errorf("parsing test plan %q: %w", path, err)))
 		return report
 	}
-	basedir, err := filepath.Abs(filepath.Dir(path))
-	if err != nil {
-		report.addEntryAsError("load", asInfraError(fmt.Errorf("resolving base directory for %q: %w", path, err)))
-		return report
-	}
-	context := planContext{}
-	context.basedir = basedir
+	context := planContext{basedir: filepath.Dir(absPath)}
 	return l.execute(plan, context)
 }
 
