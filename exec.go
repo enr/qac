@@ -22,6 +22,7 @@ type executionResult struct {
 	execution string
 	err       error
 	timedOut  bool
+	duration  time.Duration
 }
 
 // The actual command executor used from launcher.

@@ -448,3 +448,46 @@ func TestSetupTeardownTyposRejected(t *testing.T) {
 		})
 	}
 }
+
+func TestDurationAssertionFieldsAccepted(t *testing.T) {
+	input := `
+specs:
+  test:
+    command:
+      cli: mytool
+    expectations:
+      duration:
+        max: 2s
+        min: 100ms
+`
+	plan, err := unmarshalPlan(t, input)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	da := plan.Specs["test"].Expectations.DurationAssertion
+	if da.Max != "2s" {
+		t.Errorf("max = %q, want %q", da.Max, "2s")
+	}
+	if da.Min != "100ms" {
+		t.Errorf("min = %q, want %q", da.Min, "100ms")
+	}
+}
+
+func TestDurationAssertionTypoRejected(t *testing.T) {
+	input := `
+specs:
+  test:
+    command:
+      cli: mytool
+    expectations:
+      duration:
+        maxx: 2s
+`
+	_, err := unmarshalPlan(t, input)
+	if err == nil {
+		t.Fatal("expected error for unknown field 'maxx', got nil")
+	}
+	if !strings.Contains(err.Error(), "maxx") {
+		t.Errorf("error should mention 'maxx', got: %v", err)
+	}
+}

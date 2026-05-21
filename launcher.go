@@ -235,7 +235,9 @@ func (l *Launcher) executeSpec(context planContext, report *TestExecutionReport)
 		return
 	}
 	command.WorkingDir = wd
+	cmdStart := time.Now()
 	context.commandResult = l.executor.execute(command)
+	context.commandResult.duration = time.Since(cmdStart)
 	if context.commandResult.timedOut {
 		report.addEntryTimedOut(phase, command.Timeout)
 		return
@@ -257,5 +259,9 @@ func (l *Launcher) executeSpec(context planContext, report *TestExecutionReport)
 			continue
 		}
 		report.addEntryAsAssertionResult(phase, a.verify(context))
+	}
+	da := expectations.DurationAssertion
+	if da.Max != "" || da.Min != "" {
+		report.addEntryAsAssertionResult(phase, da.verify(context))
 	}
 }

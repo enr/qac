@@ -226,9 +226,18 @@ type OutputAssertions struct {
 	Stderr OutputAssertion `yaml:"stderr"`
 }
 
+// DurationAssertion asserts that the command's wall-clock execution time is
+// within the specified bounds.  Both fields accept any string accepted by
+// time.ParseDuration (e.g. "2s", "500ms", "1m30s").
+type DurationAssertion struct {
+	Max string `yaml:"max"`
+	Min string `yaml:"min"`
+}
+
 // Expectations is the aggregate of the final assertions on the command executed.
 type Expectations struct {
 	StatusAssertion      StatusAssertion       `yaml:"status"`
 	OutputAssertions     OutputAssertions      `yaml:"output"`
 	FileSystemAssertions []FileSystemAssertion `yaml:"fs"`
+	DurationAssertion    DurationAssertion     `yaml:"duration"`
 }
