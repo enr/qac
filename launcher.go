@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"testing"
 	"time"
 
 	"github.com/enr/go-files/files"
@@ -50,6 +51,37 @@ func (l *Launcher) ExecuteFile(path string, opts ...RunOption) (*TestExecutionRe
 	}
 	context := planContext{basedir: filepath.Dir(absPath)}
 	return l.execute(plan, context, cfg), nil
+}
+
+// ExecuteFileT loads and runs a plan file, failing t immediately on load/parse
+// errors and recording every spec failure as a t.Errorf call.
+// It is the idiomatic single-line form for Go tests:
+//
+//	qac.NewLauncher().ExecuteFileT(t, "plan.yaml")
+func (l *Launcher) ExecuteFileT(t testing.TB, path string, opts ...RunOption) *TestExecutionReport {
+	t.Helper()
+	report, err := l.ExecuteFile(path, opts...)
+	if err != nil {
+		t.Fatalf("qac: cannot load plan: %v", err)
+		return nil
+	}
+	for _, e := range report.AllErrors() {
+		t.Errorf("qac: %v", e)
+	}
+	return report
+}
+
+// ExecuteT runs a TestPlan, recording every spec failure as a t.Errorf call.
+// It is the idiomatic single-line form when constructing plans in Go:
+//
+//	qac.NewLauncher().ExecuteT(t, plan)
+func (l *Launcher) ExecuteT(t testing.TB, plan TestPlan, opts ...RunOption) *TestExecutionReport {
+	t.Helper()
+	report := l.Execute(plan, opts...)
+	for _, e := range report.AllErrors() {
+		t.Errorf("qac: %v", e)
+	}
+	return report
 }
 
 // Execute run tests loaded from a TestPlan.
