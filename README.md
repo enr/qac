@@ -380,6 +380,39 @@ specs:
         equals_to: 0
 ```
 
+### Duration assertions
+
+`expectations.duration` asserts on the wall-clock execution time of the
+command. Both `min` and `max` accept any duration string understood by Go's
+`time.ParseDuration` (e.g. `"500ms"`, `"2s"`, `"1m30s"`). Either field can be
+omitted.
+
+```yaml
+specs:
+  fast-query:
+    command:
+      cli: ./myapp query --cached
+    expectations:
+      status:
+        equals_to: 0
+      duration:
+        max: 200ms   # must complete within 200 ms
+
+  slow-build:
+    command:
+      cli: make all
+    expectations:
+      status:
+        equals_to: 0
+      duration:
+        min: 1s      # sanity-check: something actually ran
+        max: 5m      # upper bound for CI timeout budgets
+```
+
+Note: `timeout` (under `command`) stops the process when the limit is reached;
+`duration.max` (under `expectations`) lets the command finish and then fails
+the spec if it took too long.
+
 ## Working with the report
 
 `Execute` and `ExecuteFile` return a `*TestExecutionReport`. Three convenience
