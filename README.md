@@ -584,6 +584,39 @@ names := launcher.ListSpecs(plan, qac.WithTags("fast"))
 fmt.Println(names) // ["spec-a", "spec-b"]
 ```
 
+## Error classification
+
+Errors returned by `AllErrors()` or collected via `FailWith` / `ExecuteFileT`
+may be `*qac.Error` values that carry an `ErrorKind` for programmatic
+classification. Use `errors.As` to inspect them:
+
+```go
+import "errors"
+
+for _, err := range report.AllErrors() {
+  var qErr *qac.Error
+  if errors.As(err, &qErr) {
+    switch qErr.Kind {
+    case qac.KindAssertionFailure:
+      // an expectation was not met (wrong status, unexpected output, …)
+    case qac.KindInfrastructure:
+      // system-level failure: file I/O, path resolution, working dir missing
+    case qac.KindConfiguration:
+      // the plan is invalid: unknown YAML field, cli+exe both set, bad duration string
+    }
+  }
+}
+```
+
+| Kind | When it occurs |
+|---|---|
+| `KindAssertionFailure` | A spec's expectation was not met |
+| `KindInfrastructure` | File I/O error, unresolvable path, missing working directory |
+| `KindConfiguration` | Invalid plan: unknown YAML field, mutually exclusive fields, unparseable duration |
+
+Not every error is a `*qac.Error`; plain `error` values may also appear.
+Always guard with `errors.As` before accessing `Kind`.
+
 ## License
 
 Apache 2.0 - see LICENSE file.
