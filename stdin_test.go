@@ -172,6 +172,31 @@ func TestLauncher_StdinFileMissing(t *testing.T) {
 
 // --- Mutual exclusion ---
 
+func TestLauncher_StdinFileMissing_ErrorMentionsPath(t *testing.T) {
+	const missingPath = "/nonexistent/qac_test_stdin_file_path.txt"
+	spec := Spec{
+		Command: Command{
+			Cli:       "cat",
+			StdinFile: missingPath,
+		},
+	}
+	res := NewLauncher().Execute(TestPlan{Specs: map[string]Spec{"s": spec}})
+	errs := res.AllErrors()
+	if len(errs) == 0 {
+		t.Fatal("expected error for missing stdin_file, got none")
+	}
+	found := false
+	for _, err := range errs {
+		if strings.Contains(err.Error(), "qac_test_stdin_file_path.txt") {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Errorf("error message should mention the missing file path, got: %v", errs)
+	}
+}
+
 func TestLauncher_StdinAndStdinFileMutuallyExclusive(t *testing.T) {
 	spec := Spec{
 		Command: Command{
