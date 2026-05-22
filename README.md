@@ -127,6 +127,87 @@ teardown:          # commands to run after all specs (always runs)
 specs:             # the tests
 ```
 
+### Command fields
+
+Every `command` block (in `specs`, `setup`, and `teardown`) accepts the
+following fields.
+
+#### cli vs exe+args
+
+`cli` runs the value through the system shell (`$SHELL -c` on Unix, `cmd /C`
+on Windows) — shell features like pipes, redirects, and globs work. `exe` +
+`args` starts the process directly without a shell. The two are mutually
+exclusive.
+
+```yaml
+command:
+  cli: cat /etc/hosts | grep localhost   # shell — pipes work
+
+command:
+  exe: /usr/bin/grep
+  args: [localhost, /etc/hosts]          # direct — no shell
+```
+
+#### working_dir
+
+Sets the working directory for the command. Relative paths are resolved from
+the directory that contains the YAML file. `~` is expanded to the current
+user's home directory.
+
+```yaml
+command:
+  working_dir: ~/projects/myapp   # ~ expansion
+  cli: make test
+
+command:
+  working_dir: ../                # relative to the plan file
+  cli: go build ./...
+```
+
+When `working_dir` is omitted the directory of the plan file is used.
+
+#### env
+
+Injects extra environment variables into the command process without touching
+the parent environment. Useful for credentials, feature flags, or locale
+settings.
+
+```yaml
+command:
+  cli: ./myapp --config config.yaml
+  env:
+    APP_ENV: test
+    LOG_LEVEL: debug
+```
+
+#### timeout
+
+Maximum wall-clock time to wait for the command. Accepts any duration string
+understood by Go's `time.ParseDuration` (e.g. `"30s"`, `"1m30s"`, `"500ms"`).
+When the timeout expires the spec is recorded as `TIMEOUT` and the command's
+output is not checked.
+
+```yaml
+command:
+  cli: curl -sf http://localhost:8080/health
+  timeout: 10s
+```
+
+#### stdin / stdin_file
+
+Pipe a string literal or a file's contents to the command's standard input.
+`stdin` and `stdin_file` are mutually exclusive.
+
+```yaml
+command:
+  exe: cat
+  stdin: "hello world"        # inline string
+
+command:
+  cli: wc -l
+  stdin_file: ./testdata/input.txt   # contents of a file
+```
+
 ### Preconditions
 
 Preconditions are checked before the plan (or spec) runs. If any check fails,
