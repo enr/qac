@@ -208,6 +208,37 @@ command:
   stdin_file: ./testdata/input.txt   # contents of a file
 ```
 
+#### ext (platform-specific extension)
+
+`ext` appends a platform-specific suffix to `exe` at runtime, based on
+`runtime.GOOS`. Use it to write a single plan that runs on both Unix and
+Windows without duplicating specs.
+
+```yaml
+specs:
+  run-tool:
+    command:
+      exe: ./bin/mytool
+      ext:
+        windows: .exe   # becomes ./bin/mytool.exe on Windows
+        unix: ""        # no suffix on Unix (can be omitted)
+      args: [--version]
+    expectations:
+      status:
+        equals_to: 0
+```
+
+`ext` is also accepted on file and filesystem assertions to make path checks
+cross-platform:
+
+```yaml
+expectations:
+  fs:
+    - file: ./bin/mytool
+      ext:
+        windows: .exe
+```
+
 ### Preconditions
 
 Preconditions are checked before the plan (or spec) runs. If any check fails,
