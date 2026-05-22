@@ -355,6 +355,21 @@ specs:
 	}
 }
 
+func TestInclude_CircularDetectedDeepChain(t *testing.T) {
+	// A→B→C→A: verifies detection beyond the direct (depth-1) case.
+	dir := t.TempDir()
+	writeFile(t, dir, "a.yaml", "include:\n  - ./b.yaml\nspecs:\n  a:\n    command:\n      cli: echo a\n")
+	writeFile(t, dir, "b.yaml", "include:\n  - ./c.yaml\nspecs:\n  b:\n    command:\n      cli: echo b\n")
+	writeFile(t, dir, "c.yaml", "include:\n  - ./a.yaml\nspecs:\n  c:\n    command:\n      cli: echo c\n")
+	_, err := loadPlanFile(filepath.Join(dir, "a.yaml"), make(map[string]bool))
+	if err == nil {
+		t.Fatal("expected error for circular include chain A→B→C→A, got nil")
+	}
+	if !strings.Contains(err.Error(), "circular") {
+		t.Errorf("error should mention circular include, got: %v", err)
+	}
+}
+
 // --- ExecuteFile integration ---
 
 func TestExecuteFile_IncludedSpecsRun(t *testing.T) {

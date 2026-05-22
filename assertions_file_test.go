@@ -212,6 +212,46 @@ func TestIsBinaryFile_EmptyFile(t *testing.T) {
 	}
 }
 
+// --- equals_to: binary file comparison ---
+
+func TestFileAssertion_EqualsTo_BinaryFilesIdentical(t *testing.T) {
+	dir := t.TempDir()
+	// PNG-style header with a null byte forces isBinaryFile() to return true.
+	content := []byte{0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0x00, 0x00, 0x00, 0x0D}
+	if err := os.WriteFile(filepath.Join(dir, "a.bin"), content, 0644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "b.bin"), content, 0644); err != nil {
+		t.Fatal(err)
+	}
+	r := (&FileAssertion{Path: "a.bin", EqualsTo: "b.bin"}).verify(planContext{basedir: dir})
+	if !r.Success() {
+		t.Errorf("expected success for identical binary files, got: %v", r.Errors())
+	}
+}
+
+func TestFileAssertion_EqualsTo_BinaryFilesDiffer(t *testing.T) {
+	dir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(dir, "a.bin"), []byte{0x00, 0x01, 0x02, 0x03}, 0644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "b.bin"), []byte{0x00, 0x01, 0x02, 0xFF}, 0644); err != nil {
+		t.Fatal(err)
+	}
+	r := (&FileAssertion{Path: "a.bin", EqualsTo: "b.bin"}).verify(planContext{basedir: dir})
+	if r.Success() {
+		t.Error("expected failure for differing binary files, got success")
+	}
+	errs := r.Errors()
+	if len(errs) == 0 {
+		t.Fatal("expected at least one error for differing binary files")
+	}
+	msg := errs[0].Error()
+	if !strings.Contains(msg, "a.bin") || !strings.Contains(msg, "b.bin") {
+		t.Errorf("error message should name both files, got: %s", msg)
+	}
+}
+
 // --- ContainsMatching ---
 
 func TestFileContainsMatching_Pass(t *testing.T) {
